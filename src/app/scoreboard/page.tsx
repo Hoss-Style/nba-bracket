@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect } from "react";
 import Nav from "@/components/Nav";
 import { Entry, ScoreBreakdown, BracketPicks } from "@/lib/types";
 import { getAllEntries, getActualResults } from "@/lib/supabase";
@@ -18,61 +18,11 @@ interface RankedEntry {
   picks: BracketPicks;
 }
 
-function getHighlightColor(abbr: string): string {
-  const team = getTeamByAbbr(abbr);
-  if (!team) return "var(--text-muted)";
-  const getBrightness = (hex: string) => {
-    const h = hex.replace("#", "");
-    const r = parseInt(h.substring(0, 2), 16);
-    const g = parseInt(h.substring(2, 4), 16);
-    const b = parseInt(h.substring(4, 6), 16);
-    return (r * 299 + g * 587 + b * 114) / 1000;
-  };
-  const lighten = (hex: string, amount: number) => {
-    const h = hex.replace("#", "");
-    const r = Math.min(255, parseInt(h.substring(0, 2), 16) + amount);
-    const g = Math.min(255, parseInt(h.substring(2, 4), 16) + amount);
-    const b = Math.min(255, parseInt(h.substring(4, 6), 16) + amount);
-    return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
-  };
-  const pb = getBrightness(team.primaryColor);
-  const sb = team.secondaryColor ? getBrightness(team.secondaryColor) : 0;
-  if (pb >= 100) return team.primaryColor;
-  if (sb >= 100) return team.secondaryColor;
-  const base = pb >= sb ? team.primaryColor : (team.secondaryColor || team.primaryColor);
-  return lighten(base, 80);
-}
-
-// Helper to describe a pick in short form
-function describePicksSummary(picks: BracketPicks): { west: { text: string; abbr: string }[]; east: { text: string; abbr: string }[] } {
-  const descSeries = (pick: { winner: string; games: number } | null) => {
-    if (!pick) return { text: "—", abbr: "" };
-    const team = getTeamByAbbr(pick.winner);
-    return { text: `${team?.name || pick.winner} in ${pick.games}`, abbr: pick.winner };
-  };
-
-  return {
-    west: [
-      descSeries(picks.westR1_1), descSeries(picks.westR1_2),
-      descSeries(picks.westR1_3), descSeries(picks.westR1_4),
-      descSeries(picks.westR2_1), descSeries(picks.westR2_2),
-      descSeries(picks.westCF),
-    ],
-    east: [
-      descSeries(picks.eastR1_1), descSeries(picks.eastR1_2),
-      descSeries(picks.eastR1_3), descSeries(picks.eastR1_4),
-      descSeries(picks.eastR2_1), descSeries(picks.eastR2_2),
-      descSeries(picks.eastCF),
-    ],
-  };
-}
-
 export default function ScoreboardPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [rankings, setRankings] = useState<RankedEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasResults, setHasResults] = useState(false);
-  const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const canEdit = isBeforeDeadline();
 
   useEffect(() => {
@@ -134,8 +84,6 @@ export default function ScoreboardPage() {
     return "rank-other";
   };
 
-  const roundLabels = ["R1", "R1", "R1", "R1", "Semis", "Semis", "Conf. Finals"];
-
   return (
     <>
       <Nav />
@@ -181,119 +129,53 @@ export default function ScoreboardPage() {
                   <tr>
                     <th style={{ width: "50px" }}>Rank</th>
                     <th>Player</th>
-                    <th>Champion Pick</th>
-                    <th>Finals MVP</th>
+                    <th>Champion</th>
+                    <th>MVP</th>
                     {hasResults && (
                       <>
-                        <th>Winners</th>
-                        <th>Games</th>
-                        <th>Upsets</th>
+                        <th>W</th>
+                        <th>G</th>
+                        <th>U</th>
                         <th>MVP</th>
                       </>
                     )}
-                    <th>Total</th>
+                    <th>{hasResults ? "Pts" : "Total"}</th>
+                    <th style={{ width: "70px" }}></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {rankings.map((entry, i) => {
-                    const rowKey = entry.email + i;
-                    const isExpanded = expandedRow === rowKey;
-                    const summary = isExpanded ? describePicksSummary(entry.picks) : null;
-
-                    const renderPickRows = (picks: { text: string; abbr: string }[]) => {
-                      const elements: React.ReactNode[] = [];
-                      picks.forEach((pick, j) => {
-                        // Add divider before Semis (index 4) and Conf Finals (index 6)
-                        if (j === 4 || j === 6) {
-                          elements.push(<div key={`div-${j}`} className="picks-detail-divider" />);
-                        }
-                        elements.push(
-                          <div key={j} className="picks-detail-row">
-                            <span className="picks-detail-round">{roundLabels[j]}</span>
-                            <span className="picks-detail-pick">
-                              {pick.abbr && <span className="picks-detail-color-dot" style={{ background: getHighlightColor(pick.abbr) }} />}
-                              {pick.text}
-                            </span>
-                          </div>
-                        );
-                      });
-                      return elements;
-                    };
-
-                    return (
-                      <Fragment key={rowKey}>
-                        <tr
-                          className="scoreboard-row"
-                          onClick={() => setExpandedRow(isExpanded ? null : rowKey)}
-                          style={{ cursor: "pointer" }}
-                        >
-                          <td>
-                            <span className={`rank-badge ${getRankClass(i)}`}>
-                              {hasResults ? i + 1 : "—"}
-                            </span>
-                          </td>
-                          <td style={{ fontWeight: 600 }}>
-                            {entry.name}
-                            <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginLeft: "0.5rem" }}>
-                              {isExpanded ? "▲" : "▼"}
-                            </span>
-                          </td>
-                          <td>{entry.champion}</td>
-                          <td className="text-muted">{entry.finalsMVP}</td>
-                          {hasResults && (
-                            <>
-                              <td className="score-detail">{entry.score.correctWinners}</td>
-                              <td className="score-detail">{entry.score.correctGames}</td>
-                              <td className="score-detail">{entry.score.upsetBonuses}</td>
-                              <td className="score-detail">{entry.score.finalsMVP > 0 ? "10" : "0"}</td>
-                            </>
-                          )}
-                          <td>
-                            <span className={hasResults ? "score-total" : "text-muted"}>
-                              {hasResults ? entry.score.total : "—"}
-                            </span>
-                          </td>
-                        </tr>
-                        {isExpanded && summary && (
-                          <tr key={rowKey + "-detail"} className="scoreboard-row">
-                            <td colSpan={hasResults ? 9 : 5} style={{ padding: "0 1rem 1rem" }}>
-                              <div className="picks-detail">
-                                <div className="picks-detail-conf">
-                                  <div className="picks-detail-title" style={{ color: "var(--accent-blue)" }}>West</div>
-                                  {renderPickRows(summary.west)}
-                                </div>
-                                <div className="picks-detail-conf">
-                                  <div className="picks-detail-title" style={{ color: "var(--accent-red)" }}>East</div>
-                                  {renderPickRows(summary.east)}
-                                </div>
-                                <div className="picks-detail-conf">
-                                  <div className="picks-detail-title" style={{ color: "var(--accent-gold)" }}>Finals</div>
-                                  <div className="picks-detail-row">
-                                    <span className="picks-detail-round">Champ</span>
-                                    <span className="picks-detail-pick">
-                                      {entry.picks.finals?.winner && <span className="picks-detail-color-dot" style={{ background: getHighlightColor(entry.picks.finals.winner) }} />}
-                                      {entry.champion} {entry.picks.finals ? `in ${entry.picks.finals.games}` : ""}
-                                    </span>
-                                  </div>
-                                  <div className="picks-detail-row">
-                                    <span className="picks-detail-round">MVP</span>
-                                    <span className="picks-detail-pick">{entry.finalsMVP}</span>
-                                  </div>
-                                </div>
-                                {entry.id && (
-                                  <div className="picks-detail-actions">
-                                    <a href={`/bracket/${entry.id}`} className="btn btn-secondary btn-sm">
-                                      View Full Bracket &rarr;
-                                    </a>
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
+                  {rankings.map((entry, i) => (
+                    <tr key={entry.email + i} className="scoreboard-row">
+                      <td>
+                        <span className={`rank-badge ${getRankClass(i)}`}>
+                          {hasResults ? i + 1 : "—"}
+                        </span>
+                      </td>
+                      <td style={{ fontWeight: 600 }}>{entry.name}</td>
+                      <td>{entry.champion}</td>
+                      <td className="text-muted">{entry.finalsMVP}</td>
+                      {hasResults && (
+                        <>
+                          <td className="score-detail">{entry.score.correctWinners}</td>
+                          <td className="score-detail">{entry.score.correctGames}</td>
+                          <td className="score-detail">{entry.score.upsetBonuses}</td>
+                          <td className="score-detail">{entry.score.finalsMVP > 0 ? "10" : "0"}</td>
+                        </>
+                      )}
+                      <td>
+                        <span className={hasResults ? "score-total" : "text-muted"}>
+                          {hasResults ? entry.score.total : "—"}
+                        </span>
+                      </td>
+                      <td>
+                        {entry.id && (
+                          <a href={`/bracket/${entry.id}`} className="btn btn-secondary btn-sm scoreboard-view-btn">
+                            View
+                          </a>
                         )}
-                      </Fragment>
-                    );
-                  })}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

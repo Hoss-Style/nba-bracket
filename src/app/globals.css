@@ -856,6 +856,12 @@ body {
   border-radius: 0 10px 10px 0;
 }
 
+.scoreboard-view-btn {
+  padding: 0.3rem 0.75rem !important;
+  font-size: 0.75rem !important;
+  white-space: nowrap;
+}
+
 .rank-badge {
   display: inline-flex;
   align-items: center;
