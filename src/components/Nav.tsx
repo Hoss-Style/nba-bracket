@@ -32,7 +32,8 @@ export default function Nav() {
       </Link>
       {isBracketPage && isBeforeDeadline() && !countdown.expired && (
         <div className="nav-countdown">
-          ⏱ <strong>{countdown.days}d {countdown.hours}h {countdown.minutes}m</strong>
+          <span className="nav-countdown-label">Locks in</span>
+          <strong>{countdown.days}d {countdown.hours}h {countdown.minutes}m</strong>
         </div>
       )}
       <div className="nav-links">

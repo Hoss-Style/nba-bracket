@@ -217,7 +217,12 @@ body {
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
-  padding-bottom: 6rem;
+  padding-bottom: 5rem;
+}
+
+.bracket-page-container {
+  padding-top: 0.5rem;
+  padding-bottom: 4.5rem;
 }
 
 .page-header {
@@ -267,9 +272,24 @@ body {
 }
 
 .nav-countdown {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
+  font-size: 0.7rem;
+  color: #ffffff;
   font-variant-numeric: tabular-nums;
+  background: rgba(255, 50, 50, 0.15);
+  border: 1px solid rgba(255, 50, 50, 0.3);
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.nav-countdown-label {
+  color: #ff6b6b;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
 }
 
 .nav-countdown strong {
@@ -308,8 +328,7 @@ body {
   align-items: flex-start;
   gap: 0;
   overflow-x: auto;
-  padding: 1rem 0;
-  min-height: 700px;
+  padding: 0.5rem 0;
 }
 
 .bracket-conference {

@@ -163,7 +163,7 @@ export default function BracketPage() {
     <>
       <Nav />
       <div style={{ paddingTop: "3.5rem" }}>
-        <div className="page-container" style={{ paddingTop: "0.75rem" }}>
+        <div className="page-container bracket-page-container">
 
           {/* Edit mode banner */}
           {mode === "edit" && (
