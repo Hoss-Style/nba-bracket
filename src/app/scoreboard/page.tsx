@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Nav from "@/components/Nav";
-import { Entry, ScoreBreakdown, BracketPicks } from "@/lib/types";
+import { ScoreBreakdown, BracketPicks } from "@/lib/types";
 import { getAllEntries, getActualResults } from "@/lib/supabase";
 import { calculateScore } from "@/lib/scoring";
 import { getTeamByAbbr } from "@/lib/teams";
-import { isBeforeDeadline } from "@/lib/deadline";
 
 interface RankedEntry {
   id: string;
@@ -19,11 +18,9 @@ interface RankedEntry {
 }
 
 export default function ScoreboardPage() {
-  const [entries, setEntries] = useState<Entry[]>([]);
   const [rankings, setRankings] = useState<RankedEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasResults, setHasResults] = useState(false);
-  const canEdit = isBeforeDeadline();
 
   useEffect(() => {
     async function load() {
@@ -32,8 +29,6 @@ export default function ScoreboardPage() {
           getAllEntries(),
           getActualResults(),
         ]);
-
-        setEntries(allEntries);
 
         if (results) {
           setHasResults(true);
@@ -87,29 +82,8 @@ export default function ScoreboardPage() {
   return (
     <>
       <Nav />
-      <div style={{ paddingTop: "4rem" }}>
-        <div className="page-container">
-          <div className="page-header">
-            <h1>Scoreboard</h1>
-            <p>
-              {hasResults
-                ? "Live standings updated as results come in."
-                : "Entries locked in. Scores will populate once the playoffs begin."}
-            </p>
-            {entries.length > 0 && (
-              <div className="entry-count">
-                <span className="entry-count-dot" />
-                {entries.length} {entries.length === 1 ? "entry" : "entries"} submitted
-              </div>
-            )}
-            {canEdit && (
-              <div style={{ marginTop: "0.75rem" }}>
-                <a href="/bracket" className="btn btn-secondary btn-sm">
-                  Edit My Picks
-                </a>
-              </div>
-            )}
-          </div>
+      <div style={{ paddingTop: "3.5rem" }}>
+        <div className="page-container" style={{ paddingTop: "1rem" }}>
 
           {loading ? (
             <div style={{ textAlign: "center", padding: "3rem", color: "var(--text-muted)" }}>
@@ -128,7 +102,7 @@ export default function ScoreboardPage() {
                 <thead>
                   <tr>
                     <th style={{ width: "50px" }}>Rank</th>
-                    <th>Player</th>
+                    <th>Name</th>
                     <th>Champion</th>
                     <th>MVP</th>
                     {hasResults && (
