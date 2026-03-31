@@ -103,14 +103,14 @@ export default function ScoreboardPage() {
                   <tr>
                     <th style={{ width: "50px" }}>Rank</th>
                     <th>Name</th>
-                    <th>Champion</th>
-                    <th>MVP</th>
+                    <th className="scoreboard-hide-mobile">Champion</th>
+                    <th className="scoreboard-hide-mobile">MVP</th>
                     {hasResults && (
                       <>
-                        <th>W</th>
-                        <th>G</th>
-                        <th>U</th>
-                        <th>MVP</th>
+                        <th className="scoreboard-hide-mobile">W</th>
+                        <th className="scoreboard-hide-mobile">G</th>
+                        <th className="scoreboard-hide-mobile">U</th>
+                        <th className="scoreboard-hide-mobile">MVP</th>
                       </>
                     )}
                     <th>{hasResults ? "Pts" : "Total"}</th>
@@ -126,14 +126,14 @@ export default function ScoreboardPage() {
                         </span>
                       </td>
                       <td style={{ fontWeight: 600 }}>{entry.name}</td>
-                      <td>{entry.champion}</td>
-                      <td className="text-muted">{entry.finalsMVP}</td>
+                      <td className="scoreboard-hide-mobile">{entry.champion}</td>
+                      <td className="scoreboard-hide-mobile text-muted">{entry.finalsMVP}</td>
                       {hasResults && (
                         <>
-                          <td className="score-detail">{entry.score.correctWinners}</td>
-                          <td className="score-detail">{entry.score.correctGames}</td>
-                          <td className="score-detail">{entry.score.upsetBonuses}</td>
-                          <td className="score-detail">{entry.score.finalsMVP > 0 ? "10" : "0"}</td>
+                          <td className="scoreboard-hide-mobile score-detail">{entry.score.correctWinners}</td>
+                          <td className="scoreboard-hide-mobile score-detail">{entry.score.correctGames}</td>
+                          <td className="scoreboard-hide-mobile score-detail">{entry.score.upsetBonuses}</td>
+                          <td className="scoreboard-hide-mobile score-detail">{entry.score.finalsMVP > 0 ? "10" : "0"}</td>
                         </>
                       )}
                       <td>

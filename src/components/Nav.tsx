@@ -30,7 +30,8 @@ export default function Nav() {
     <>
       <nav className="nav">
         <Link href="/" className="nav-brand">
-          NBA Bracket Challenge
+          <span className="nav-brand-full">NBA Bracket Challenge</span>
+          <span className="nav-brand-short">NBA Bracket</span>
         </Link>
         {isBracketPage && isBeforeDeadline() && !countdown.expired && (
           <div className="nav-countdown">
@@ -45,7 +46,10 @@ export default function Nav() {
               href={link.href}
               className={`nav-link ${pathname === link.href ? "nav-link-active" : ""}`}
             >
-              {link.label}
+              <span className="nav-link-full">{link.label}</span>
+              <span className="nav-link-short">
+                {link.label === "Make Picks" ? "Picks" : link.label === "Scoreboard" ? "Scores" : link.label}
+              </span>
             </Link>
           ))}
           <button
