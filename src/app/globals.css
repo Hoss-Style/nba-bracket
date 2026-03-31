@@ -711,30 +711,39 @@ body {
   margin-top: 0.5rem;
 }
 
-/* Deadline banner */
-.deadline-banner {
-  background: linear-gradient(135deg, rgba(20, 24, 41, 0.95), rgba(30, 20, 40, 0.95));
-  border: 1px solid rgba(255, 71, 87, 0.3);
-  border-radius: 12px;
-  padding: 1.25rem 1.5rem;
-  text-align: center;
-  margin-bottom: 1.5rem;
+/* Deadline inline banner */
+.deadline-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 71, 87, 0.08);
+  border: 1px solid rgba(255, 71, 87, 0.2);
+  border-radius: 999px;
+  padding: 0.4rem 1rem;
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
 }
 
-.deadline-banner .deadline-label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: var(--accent-red);
-  font-weight: 700;
-  margin-bottom: 0.25rem;
+.deadline-inline-icon {
+  font-size: 0.85rem;
 }
 
-.deadline-banner .deadline-time {
-  font-size: 1.5rem;
-  font-weight: 800;
+.deadline-inline-text {
   color: var(--text-primary);
-  margin-top: 0.25rem;
+}
+
+.deadline-inline-text strong {
+  color: #ffffff;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.deadline-inline-date {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  padding-left: 0.5rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* ========== SCOREBOARD ========== */

@@ -200,29 +200,14 @@ export default function BracketPage() {
             <h1>Make Your Picks</h1>
             <p>Click a team to advance them, then select the number of games.</p>
 
-            {/* Countdown */}
+            {/* Countdown - inline banner */}
             {!countdown.expired && (
-              <div className="deadline-banner" style={{ marginTop: "1rem", maxWidth: "500px", marginLeft: "auto", marginRight: "auto" }}>
-                <div className="deadline-label">Picks lock at tip-off</div>
-                <div className="countdown">
-                  <div className="countdown-unit">
-                    <div className="countdown-value">{countdown.days}</div>
-                    <div className="countdown-label">Days</div>
-                  </div>
-                  <div className="countdown-unit">
-                    <div className="countdown-value">{countdown.hours}</div>
-                    <div className="countdown-label">Hours</div>
-                  </div>
-                  <div className="countdown-unit">
-                    <div className="countdown-value">{countdown.minutes}</div>
-                    <div className="countdown-label">Min</div>
-                  </div>
-                  <div className="countdown-unit">
-                    <div className="countdown-value">{countdown.seconds}</div>
-                    <div className="countdown-label">Sec</div>
-                  </div>
-                </div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}>{DEADLINE_DISPLAY}</div>
+              <div className="deadline-inline">
+                <span className="deadline-inline-icon">⏱</span>
+                <span className="deadline-inline-text">
+                  Picks lock in <strong>{countdown.days}d {countdown.hours}h {countdown.minutes}m {countdown.seconds}s</strong>
+                </span>
+                <span className="deadline-inline-date">{DEADLINE_DISPLAY}</span>
               </div>
             )}
 
