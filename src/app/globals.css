@@ -217,7 +217,7 @@ body {
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
-  padding-bottom: 4rem;
+  padding-bottom: 6rem;
 }
 
 .page-header {
@@ -569,7 +569,88 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ========== SUBMISSION FORM ========== */
+/* ========== FLOATING SUBMIT BUTTON ========== */
+.floating-submit {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem 1.5rem;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to top, var(--bg-primary) 60%, transparent);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+}
+
+.floating-submit .submit-btn {
+  max-width: 500px;
+  font-size: 1rem;
+  padding: 0.9rem 2rem;
+}
+
+/* ========== SUBMIT MODAL ========== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 440px;
+  width: 100%;
+  position: relative;
+  animation: slideUp 0.25s ease;
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  line-height: 1;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.modal-content h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== SUBMISSION FORM (legacy) ========== */
 .submit-section {
   max-width: 500px;
   margin: 2rem auto;

@@ -17,6 +17,7 @@ export default function BracketPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
 
   // Edit mode
   const [mode, setMode] = useState<"new" | "lookup" | "edit">("new");
@@ -332,64 +333,81 @@ export default function BracketPage() {
                 />
               </div>
 
-              {/* Submit Form */}
-              <div className="submit-section">
-                <h3>{mode === "edit" ? "Save Changes" : "Submit Your Bracket"}</h3>
-                <p>
-                  {mode === "edit"
-                    ? "Review your changes and save. You can edit again before the deadline."
-                    : "Enter your info below. You can edit your picks anytime before the playoffs start."}
-                </p>
-
-                {error && (
-                  <div style={{ color: "var(--accent-red)", fontSize: "0.85rem", marginBottom: "1rem" }}>
-                    {error}
-                  </div>
-                )}
-
-                {mode !== "edit" && (
-                  <>
-                    <div className="form-group">
-                      <label className="form-label">Name</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        placeholder="Your name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Email</label>
-                      <input
-                        type="email"
-                        className="form-input"
-                        placeholder="your@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                      />
-                    </div>
-                  </>
-                )}
-
+              {/* Floating Submit Button */}
+              <div className="floating-submit">
                 <button
-                  onClick={handleSubmit}
-                  disabled={submitting || !allComplete}
+                  onClick={() => { setError(""); setShowSubmitModal(true); }}
+                  disabled={!allComplete}
                   className={`btn submit-btn ${allComplete ? "btn-gold" : "btn-secondary"}`}
-                  style={{ opacity: allComplete ? 1 : 0.5 }}
+                  style={{ opacity: allComplete ? 1 : 0.6, width: "100%" }}
                 >
-                  {submitting
-                    ? "Saving..."
-                    : mode === "edit"
-                    ? allComplete
-                      ? "Save Updated Picks"
-                      : `Complete All Picks First (${completedCount}/${totalPicks})`
-                    : allComplete
-                    ? "Lock In My Picks"
+                  {allComplete
+                    ? mode === "edit"
+                      ? "Save Updated Picks ✓"
+                      : "Submit Bracket ✓"
                     : `Complete All Picks First (${completedCount}/${totalPicks})`}
                 </button>
               </div>
+
+              {/* Submit Modal */}
+              {showSubmitModal && (
+                <div className="modal-overlay" onClick={() => setShowSubmitModal(false)}>
+                  <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                    <button className="modal-close" onClick={() => setShowSubmitModal(false)}>&times;</button>
+                    <h3>{mode === "edit" ? "Save Changes" : "Submit Your Bracket"}</h3>
+                    <p style={{ color: "var(--text-muted)", marginBottom: "1.5rem" }}>
+                      {mode === "edit"
+                        ? "Review your changes and save. You can edit again before the deadline."
+                        : "Enter your info below. You can edit your picks anytime before the playoffs start."}
+                    </p>
+
+                    {error && (
+                      <div style={{ color: "var(--accent-red)", fontSize: "0.85rem", marginBottom: "1rem" }}>
+                        {error}
+                      </div>
+                    )}
+
+                    {mode !== "edit" && (
+                      <>
+                        <div className="form-group">
+                          <label className="form-label">Name</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            placeholder="Your name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label">Email</label>
+                          <input
+                            type="email"
+                            className="form-input"
+                            placeholder="your@email.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    <button
+                      onClick={handleSubmit}
+                      disabled={submitting}
+                      className="btn btn-gold submit-btn"
+                      style={{ width: "100%", marginTop: "0.5rem" }}
+                    >
+                      {submitting
+                        ? "Saving..."
+                        : mode === "edit"
+                        ? "Save Updated Picks"
+                        : "Lock In My Picks"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
