@@ -21,7 +21,6 @@ export default function BracketPage() {
 
   // Edit mode
   const [mode, setMode] = useState<"new" | "edit">("new");
-  const [existingEntryId, setExistingEntryId] = useState<string | undefined>();
 
   // Deadline
   const [locked, setLocked] = useState(!isBeforeDeadline());
@@ -60,28 +59,23 @@ export default function BracketPage() {
     setError("");
 
     try {
-      if (mode === "edit" && existingEntryId) {
-        // Update existing entry
+      // Check if email already exists — if so, update; otherwise create new
+      const existing = await getEntryByEmail(email.trim());
+      if (existing) {
         const success = await updateEntry({
-          id: existingEntryId,
+          id: existing.id,
           name: name.trim(),
           email: email.trim(),
           picks: picksWithMVP,
           submittedAt: new Date().toISOString(),
         });
         if (success) {
+          setMode("edit");
           setSubmitted(true);
         } else {
           setError("Failed to update. Please try again.");
         }
       } else {
-        // Check if email already exists
-        const existing = await getEntryByEmail(email.trim());
-        if (existing) {
-          setError("An entry with this email already exists. Use 'Edit My Picks' above to update it.");
-          setSubmitting(false);
-          return;
-        }
         const entry = await submitEntry({
           name: name.trim(),
           email: email.trim(),
@@ -164,28 +158,6 @@ export default function BracketPage() {
       <Nav />
       <div style={{ paddingTop: "3.5rem" }}>
         <div className="page-container bracket-page-container">
-
-          {/* Edit mode banner */}
-          {mode === "edit" && (
-            <div className="edit-banner" style={{ marginBottom: "0.75rem" }}>
-              <p>
-                Editing <strong>{name}</strong>&apos;s bracket. Make your changes and save below.
-              </p>
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={() => {
-                  setMode("new");
-                  setPicks(createEmptyPicks());
-                  setName("");
-                  setEmail("");
-                  setFinalsMVP("");
-                  setExistingEntryId(undefined);
-                }}
-              >
-                Start Fresh Instead
-              </button>
-            </div>
-          )}
 
           {/* Desktop Bracket */}
           <div className="desktop-bracket">
