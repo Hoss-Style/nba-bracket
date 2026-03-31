@@ -2,9 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
+import { isBeforeDeadline, getTimeUntilDeadline } from "@/lib/deadline";
 
 export default function Nav() {
   const pathname = usePathname();
+  const isBracketPage = pathname === "/bracket";
+
+  const [countdown, setCountdown] = useState(getTimeUntilDeadline());
+
+  useEffect(() => {
+    if (!isBracketPage) return;
+    const interval = setInterval(() => {
+      setCountdown(getTimeUntilDeadline());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isBracketPage]);
 
   const links = [
     { href: "/", label: "Home" },
@@ -17,6 +30,11 @@ export default function Nav() {
       <Link href="/" className="nav-brand">
         NBA Bracket Challenge
       </Link>
+      {isBracketPage && isBeforeDeadline() && !countdown.expired && (
+        <div className="nav-countdown">
+          ⏱ <strong>{countdown.days}d {countdown.hours}h {countdown.minutes}m</strong>
+        </div>
+      )}
       <div className="nav-links">
         {links.map((link) => (
           <Link

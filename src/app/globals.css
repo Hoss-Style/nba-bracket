@@ -266,6 +266,17 @@ body {
   text-decoration: none;
 }
 
+.nav-countdown {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.nav-countdown strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
 .nav-links {
   display: flex;
   gap: 0.25rem;
