@@ -1,101 +1,95 @@
-import Image from "next/image";
+"use client";
+
+import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="hero">
+      <div className="hero-content">
+        <div className="hero-badge">Lew&apos;s Annual Challenge</div>
+        <h1 className="hero-title">NBA Playoff Bracket</h1>
+        <div className="hero-year">2026</div>
+        <p className="hero-subtitle">
+          Pick every series winner, nail the number of games, call the upsets, and predict the Finals MVP.
+          The one with the most points takes the pot.
+        </p>
+        <div className="hero-buttons">
+          <Link href="/bracket" className="btn btn-primary">
+            Make Your Picks &rarr;
+          </Link>
+          <Link href="/scoreboard" className="btn btn-secondary">
+            View Scoreboard
+          </Link>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        <div className="info-section">
+          <div className="info-grid">
+            <div className="info-card">
+              <div className="info-card-icon">&#127936;</div>
+              <h3>Pick Every Series</h3>
+              <p>Select the winner and number of games for all 15 playoff series from Round 1 through the NBA Finals.</p>
+            </div>
+            <div className="info-card">
+              <div className="info-card-icon">&#128200;</div>
+              <h3>Live Scoreboard</h3>
+              <p>Track everyone&apos;s brackets in real time as the playoffs unfold. Full transparency, updated live.</p>
+            </div>
+            <div className="info-card">
+              <div className="info-card-icon">&#128176;</div>
+              <h3>Win the Pot</h3>
+              <p>$25 entry fee. 1st place: 65%, 2nd: 25%, 3rd: 10%. Bonus $100 added to the pot if 15+ entries.</p>
+            </div>
+          </div>
+
+          {/* Scoring Breakdown */}
+          <div className="info-card" style={{ marginTop: "1.25rem" }}>
+            <h3 style={{ textAlign: "center", marginBottom: "0.75rem" }}>Scoring System</h3>
+            <table className="scoring-table">
+              <thead>
+                <tr>
+                  <th>Round</th>
+                  <th>Correct Winner</th>
+                  <th># of Games</th>
+                  <th>Upset Bonus</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>First Round</td>
+                  <td>1 pt</td>
+                  <td>1 pt</td>
+                  <td>1 pt</td>
+                </tr>
+                <tr>
+                  <td>Conf. Semis</td>
+                  <td>2 pts</td>
+                  <td>2 pts</td>
+                  <td>2 pts</td>
+                </tr>
+                <tr>
+                  <td>Conf. Finals</td>
+                  <td>3 pts</td>
+                  <td>3 pts</td>
+                  <td>3 pts</td>
+                </tr>
+                <tr>
+                  <td>NBA Finals</td>
+                  <td>5 pts</td>
+                  <td>5 pts</td>
+                  <td>5 pts</td>
+                </tr>
+                <tr>
+                  <td>Finals MVP</td>
+                  <td colSpan={3} style={{ fontWeight: 700, color: "var(--accent-gold)" }}>10 pts</td>
+                </tr>
+              </tbody>
+            </table>
+            <p style={{ textAlign: "center", marginTop: "0.5rem", fontSize: "0.75rem", color: "var(--text-muted)" }}>
+              Upset bonus: lower seed beats higher seed. Games points only awarded if winner is correct.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
