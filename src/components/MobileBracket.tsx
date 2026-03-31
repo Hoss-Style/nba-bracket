@@ -209,7 +209,7 @@ export default function MobileBracket({
     team: Team | null,
     matchupKey: keyof BracketPicks,
     isSelected: boolean,
-    position: "top" | "bottom"
+    _position: "top" | "bottom"
   ) => {
     if (!team) {
       return (

@@ -4,7 +4,7 @@ import { useCallback, useState, useRef, useEffect } from "react";
 import { BracketPicks, MatchupPick } from "@/lib/types";
 import { WEST_TEAMS, EAST_TEAMS, getTeamByAbbr } from "@/lib/teams";
 import { Team } from "@/lib/types";
-import { searchPlayers, getPlayersForTeams } from "@/lib/players";
+import { searchPlayers } from "@/lib/players";
 import MatchupCard from "./MatchupCard";
 
 interface BracketProps {
