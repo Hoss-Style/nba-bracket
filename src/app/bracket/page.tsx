@@ -117,7 +117,6 @@ export default function BracketPage() {
                 className="btn btn-secondary"
                 onClick={() => {
                   setSubmitted(false);
-                  setMode("edit");
                 }}
               >
                 Edit My Picks

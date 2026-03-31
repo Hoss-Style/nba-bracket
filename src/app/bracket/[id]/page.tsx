@@ -38,36 +38,26 @@ export default function ViewBracketPage() {
   return (
     <>
       <Nav />
-      <div style={{ paddingTop: "4rem" }}>
-        <div className="page-container">
-          <div className="page-header">
-            {loading ? (
-              <h1>Loading bracket...</h1>
-            ) : error || !entry ? (
-              <>
-                <h1>Bracket Not Found</h1>
-                <p style={{ color: "var(--text-muted)" }}>
-                  This bracket doesn&apos;t exist or has been removed.
-                </p>
-                <a href="/scoreboard" className="btn btn-primary" style={{ marginTop: "1rem", display: "inline-flex" }}>
-                  &larr; Back to Scoreboard
-                </a>
-              </>
-            ) : (
-              <>
-                <h1>{entry.name}&apos;s Bracket</h1>
-                <p style={{ color: "var(--text-muted)" }}>
-                  Read-only view &mdash; submitted {new Date(entry.submittedAt).toLocaleDateString()}
-                </p>
-                <a href="/scoreboard" className="btn btn-secondary btn-sm" style={{ marginTop: "0.5rem", display: "inline-flex" }}>
-                  &larr; Back to Scoreboard
-                </a>
-              </>
-            )}
-          </div>
-
-          {!loading && entry && (
+      <div style={{ paddingTop: "3.5rem" }}>
+        <div className="page-container bracket-page-container">
+          {loading ? (
+            <div className="page-header"><h1>Loading bracket...</h1></div>
+          ) : error || !entry ? (
+            <div className="page-header">
+              <h1>Bracket Not Found</h1>
+              <p style={{ color: "var(--text-muted)" }}>
+                This bracket doesn&apos;t exist or has been removed.
+              </p>
+              <a href="/scoreboard" className="btn btn-primary" style={{ marginTop: "1rem", display: "inline-flex" }}>
+                &larr; Back to Scoreboard
+              </a>
+            </div>
+          ) : (
             <>
+              <div className="bracket-view-header">
+                <a href="/scoreboard" className="bracket-view-back">&larr; Scoreboard</a>
+                <span className="bracket-view-name">{entry.name}&apos;s Bracket</span>
+              </div>
               <div className="desktop-bracket">
                 <Bracket
                   picks={entry.picks}

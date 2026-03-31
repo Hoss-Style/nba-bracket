@@ -225,6 +225,30 @@ body {
   padding-bottom: 4.5rem;
 }
 
+.bracket-view-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.bracket-view-back {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.bracket-view-back:hover {
+  color: var(--text-primary);
+}
+
+.bracket-view-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 .page-header {
   text-align: center;
   margin-bottom: 2rem;
