@@ -208,8 +208,7 @@ export default function MobileBracket({
   const renderTeamButton = (
     team: Team | null,
     matchupKey: keyof BracketPicks,
-    isSelected: boolean,
-    _position: "top" | "bottom"
+    isSelected: boolean
   ) => {
     if (!team) {
       return (
@@ -305,9 +304,9 @@ export default function MobileBracket({
               <div key={m.key} className="mobile-matchup">
                 <div className="mobile-matchup-label">{m.label}</div>
                 <div className="mobile-matchup-teams">
-                  {renderTeamButton(m.topTeam, m.key, isTopSelected, "top")}
+                  {renderTeamButton(m.topTeam, m.key, isTopSelected)}
                   <span className="mobile-vs">VS</span>
-                  {renderTeamButton(m.bottomTeam, m.key, isBottomSelected, "bottom")}
+                  {renderTeamButton(m.bottomTeam, m.key, isBottomSelected)}
                 </div>
                 {renderGamesSelector(m.key)}
               </div>
