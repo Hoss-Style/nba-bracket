@@ -1,26 +1,31 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Nav from "@/components/Nav";
 import Bracket from "@/components/Bracket";
 import MobileBracket from "@/components/MobileBracket";
 import { BracketPicks } from "@/lib/types";
 import { createEmptyPicks, isPicksComplete, countCompletedPicks } from "@/lib/emptyPicks";
-import { submitEntry, getEntryByEmail, updateEntry } from "@/lib/supabase";
+import { getEntryByEmail, updateEntry } from "@/lib/supabase";
 import { isBeforeDeadline } from "@/lib/deadline";
 
+interface BracketUser {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+}
+
 export default function BracketPage() {
+  const router = useRouter();
   const [picks, setPicks] = useState<BracketPicks>(createEmptyPicks());
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [finalsMVP, setFinalsMVP] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
-  const [showSubmitModal, setShowSubmitModal] = useState(false);
-
-  // Edit mode
-  const [mode, setMode] = useState<"new" | "edit">("new");
+  const [user, setUser] = useState<BracketUser | null>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
 
   // Deadline
   const [locked, setLocked] = useState(!isBeforeDeadline());
@@ -32,26 +37,45 @@ export default function BracketPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Load user from localStorage + fetch their existing picks
+  useEffect(() => {
+    const stored = localStorage.getItem("bracket_user");
+    if (!stored) {
+      router.push("/");
+      return;
+    }
+    const userData = JSON.parse(stored) as BracketUser;
+    setUser(userData);
+
+    async function loadPicks() {
+      try {
+        const entry = await getEntryByEmail(userData.email);
+        if (entry && entry.picks.westR1_1 !== null) {
+          setPicks(entry.picks);
+          setFinalsMVP(entry.picks.finalsMVP || "");
+        }
+      } catch {
+        // Fresh bracket
+      } finally {
+        setLoadingUser(false);
+      }
+    }
+    loadPicks();
+  }, [router]);
+
   const picksWithMVP = { ...picks, finalsMVP };
   const completedCount = countCompletedPicks(picksWithMVP);
   const totalPicks = 16;
   const allComplete = isPicksComplete(picksWithMVP);
 
   const handleSubmit = async () => {
+    if (!user) return;
     if (locked) {
       setError("Submissions are locked. The playoffs have begun!");
       return;
     }
-    if (!name.trim()) {
-      setError("Please enter your name.");
-      return;
-    }
-    if (!email.trim()) {
-      setError("Please enter your email.");
-      return;
-    }
     if (!allComplete) {
-      setError("Please complete all picks including Finals MVP before submitting.");
+      setError("Complete all picks including Finals MVP first.");
       return;
     }
 
@@ -59,41 +83,38 @@ export default function BracketPage() {
     setError("");
 
     try {
-      // Check if email already exists — if so, update; otherwise create new
-      const existing = await getEntryByEmail(email.trim());
+      const existing = await getEntryByEmail(user.email);
       if (existing) {
         const success = await updateEntry({
-          id: existing.id,
-          name: name.trim(),
-          email: email.trim(),
+          ...existing,
           picks: picksWithMVP,
           submittedAt: new Date().toISOString(),
         });
         if (success) {
-          setMode("edit");
           setSubmitted(true);
         } else {
-          setError("Failed to update. Please try again.");
-        }
-      } else {
-        const entry = await submitEntry({
-          name: name.trim(),
-          email: email.trim(),
-          picks: picksWithMVP,
-          submittedAt: new Date().toISOString(),
-        });
-        if (entry) {
-          setSubmitted(true);
-        } else {
-          setError("Failed to submit. Please try again.");
+          setError("Failed to save. Try again.");
         }
       }
     } catch {
-      setError("Failed to submit. Please try again.");
+      setError("Failed to save. Try again.");
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (loadingUser || !user) {
+    return (
+      <>
+        <Nav />
+        <div className="nav-spacer">
+          <div style={{ textAlign: "center", padding: "3rem", color: "var(--text-muted)" }}>
+            Loading...
+          </div>
+        </div>
+      </>
+    );
+  }
 
   if (submitted) {
     return (
@@ -102,12 +123,10 @@ export default function BracketPage() {
         <div className="nav-spacer">
           <div className="success-card">
             <div className="success-icon">&#10003;</div>
-            <h2>{mode === "edit" ? "Picks Updated!" : "Picks Submitted!"}</h2>
+            <h2>Picks Saved!</h2>
             <p>
-              Nice work, <strong>{name}</strong>.{" "}
-              {mode === "edit"
-                ? "Your bracket has been updated. You can edit again anytime before the deadline."
-                : "Your bracket has been locked in. You can edit it anytime before the playoffs begin."}
+              Nice work, <strong>{user.name}</strong>. Your bracket has been saved.
+              You can edit anytime before the deadline.
             </p>
             <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap", marginTop: "1rem" }}>
               <a href="/scoreboard" className="btn btn-primary">
@@ -115,9 +134,7 @@ export default function BracketPage() {
               </a>
               <button
                 className="btn btn-secondary"
-                onClick={() => {
-                  setSubmitted(false);
-                }}
+                onClick={() => setSubmitted(false)}
               >
                 Edit My Picks
               </button>
@@ -128,7 +145,6 @@ export default function BracketPage() {
     );
   }
 
-  // Locked state
   if (locked) {
     return (
       <>
@@ -181,76 +197,26 @@ export default function BracketPage() {
           {/* Floating Submit Button */}
           <div className="floating-submit">
             <button
-              onClick={() => { setError(""); setShowSubmitModal(true); }}
-              disabled={!allComplete}
-              className={`btn submit-btn ${allComplete ? "btn-gold" : "btn-secondary"}`}
+              onClick={handleSubmit}
+              disabled={!allComplete || submitting}
+              className={`btn submit-btn ${allComplete ? "btn-accent" : "btn-secondary"}`}
               style={{ opacity: allComplete ? 1 : 0.6, width: "100%" }}
             >
-              {allComplete
-                ? mode === "edit"
-                  ? "Save Updated Picks ✓"
-                  : "Submit Bracket ✓"
+              {submitting
+                ? "Saving..."
+                : allComplete
+                ? "Submit Bracket ✓"
                 : `Complete All Picks First (${completedCount}/${totalPicks})`}
             </button>
           </div>
 
-          {/* Submit Modal */}
-          {showSubmitModal && (
-            <div className="modal-overlay" onClick={() => setShowSubmitModal(false)}>
-              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                <button className="modal-close" onClick={() => setShowSubmitModal(false)}>&times;</button>
-                <h3>{mode === "edit" ? "Save Changes" : "Submit Your Bracket"}</h3>
-                <p style={{ color: "var(--text-muted)", marginBottom: "1.5rem" }}>
-                  {mode === "edit"
-                    ? "Review your changes and save. You can edit again before the deadline."
-                    : "Enter your info below. You can edit your picks anytime before the playoffs start."}
-                </p>
-
-                {error && (
-                  <div style={{ color: "var(--accent-red)", fontSize: "0.85rem", marginBottom: "1rem" }}>
-                    {error}
-                  </div>
-                )}
-
-                {mode !== "edit" && (
-                  <>
-                    <div className="form-group">
-                      <label className="form-label">Name</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        placeholder="Your name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Email</label>
-                      <input
-                        type="email"
-                        className="form-input"
-                        placeholder="your@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                      />
-                    </div>
-                  </>
-                )}
-
-                <button
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                  className="btn btn-gold submit-btn"
-                  style={{ width: "100%", marginTop: "0.5rem" }}
-                >
-                  {submitting
-                    ? "Saving..."
-                    : mode === "edit"
-                    ? "Save Updated Picks"
-                    : "Lock In My Picks"}
-                </button>
-              </div>
+          {error && (
+            <div style={{
+              position: "fixed", bottom: "5rem", left: "50%", transform: "translateX(-50%)",
+              background: "rgba(255,71,87,0.9)", color: "white", padding: "0.75rem 1.5rem",
+              borderRadius: "10px", fontSize: "0.85rem", zIndex: 150, textAlign: "center",
+            }}>
+              {error}
             </div>
           )}
         </div>

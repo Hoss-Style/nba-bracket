@@ -41,6 +41,8 @@ export interface Entry {
   id?: string;
   name: string;
   email: string;
+  phone: string;
+  pin: string;
   picks: BracketPicks;
   submittedAt: string;
 }

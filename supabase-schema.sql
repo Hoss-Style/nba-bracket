@@ -8,6 +8,8 @@ CREATE TABLE entries (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
+  phone TEXT NOT NULL DEFAULT '',
+  pin TEXT NOT NULL DEFAULT '',
   picks JSONB NOT NULL,
   submitted_at TIMESTAMPTZ DEFAULT now()
 );
@@ -27,6 +29,7 @@ ALTER TABLE results ENABLE ROW LEVEL SECURITY;
 -- Policies: allow public read + insert for entries, public read for results
 CREATE POLICY "Anyone can read entries" ON entries FOR SELECT USING (true);
 CREATE POLICY "Anyone can insert entries" ON entries FOR INSERT WITH CHECK (true);
+CREATE POLICY "Anyone can update entries" ON entries FOR UPDATE USING (true) WITH CHECK (true);
 
 CREATE POLICY "Anyone can read results" ON results FOR SELECT USING (true);
 CREATE POLICY "Anyone can upsert results" ON results FOR ALL USING (true) WITH CHECK (true);

@@ -31,6 +31,8 @@ export async function submitEntry(entry: Omit<Entry, "id">): Promise<Entry | nul
     body: JSON.stringify({
       name: entry.name,
       email: entry.email,
+      phone: entry.phone,
+      pin: entry.pin,
       picks: entry.picks,
       submitted_at: entry.submittedAt,
     }),
@@ -56,6 +58,8 @@ export async function getAllEntries(): Promise<Entry[]> {
     id: row.id,
     name: row.name,
     email: row.email,
+    phone: row.phone || "",
+    pin: row.pin || "",
     picks: row.picks as BracketPicks,
     submittedAt: row.submitted_at,
   }));
@@ -80,6 +84,8 @@ export async function getEntryByEmail(email: string): Promise<Entry | null> {
     id: data[0].id,
     name: data[0].name,
     email: data[0].email,
+    phone: data[0].phone || "",
+    pin: data[0].pin || "",
     picks: data[0].picks as BracketPicks,
     submittedAt: data[0].submitted_at,
   };
@@ -102,6 +108,8 @@ export async function getEntryById(id: string): Promise<Entry | null> {
     id: data[0].id,
     name: data[0].name,
     email: data[0].email,
+    phone: data[0].phone || "",
+    pin: data[0].pin || "",
     picks: data[0].picks as BracketPicks,
     submittedAt: data[0].submitted_at,
   };
