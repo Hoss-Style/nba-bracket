@@ -38,7 +38,7 @@ export default function ViewBracketPage() {
   return (
     <>
       <Nav />
-      <div style={{ paddingTop: "3.5rem" }}>
+      <div className="nav-spacer">
         <div className="page-container bracket-page-container">
           {loading ? (
             <div className="page-header"><h1>Loading bracket...</h1></div>

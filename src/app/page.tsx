@@ -6,7 +6,7 @@ export default function Home() {
   return (
     <>
       <Nav />
-      <div className="hero" style={{ paddingTop: "3.5rem" }}>
+      <div className="hero nav-spacer">
         <div className="hero-content">
           <div className="hero-badge">Lew&apos;s Annual Challenge</div>
           <h1 className="hero-title">NBA Playoff Bracket 2026</h1>

@@ -99,7 +99,7 @@ export default function BracketPage() {
     return (
       <>
         <Nav />
-        <div style={{ paddingTop: "4rem" }}>
+        <div className="nav-spacer">
           <div className="success-card">
             <div className="success-icon">&#10003;</div>
             <h2>{mode === "edit" ? "Picks Updated!" : "Picks Submitted!"}</h2>
@@ -133,7 +133,7 @@ export default function BracketPage() {
     return (
       <>
         <Nav />
-        <div style={{ paddingTop: "4rem" }}>
+        <div className="nav-spacer">
           <div className="page-container">
             <div className="locked-banner">
               <h2>Picks Are Locked</h2>
@@ -155,7 +155,7 @@ export default function BracketPage() {
   return (
     <>
       <Nav />
-      <div style={{ paddingTop: "3.5rem" }}>
+      <div className="nav-spacer">
         <div className="page-container bracket-page-container">
 
           {/* Desktop Bracket */}

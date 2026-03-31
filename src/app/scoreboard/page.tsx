@@ -82,7 +82,7 @@ export default function ScoreboardPage() {
   return (
     <>
       <Nav />
-      <div style={{ paddingTop: "3.5rem" }}>
+      <div className="nav-spacer">
         <div className="page-container" style={{ paddingTop: "1rem" }}>
 
           {loading ? (
