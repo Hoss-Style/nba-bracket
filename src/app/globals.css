@@ -297,6 +297,17 @@ body {
   font-weight: 700;
 }
 
+.nav-rules-btn {
+  background: none;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.nav-rules-btn:hover {
+  border-color: var(--text-muted);
+}
+
 .nav-links {
   display: flex;
   gap: 0.25rem;
