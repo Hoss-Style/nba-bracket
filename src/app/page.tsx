@@ -1,16 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { getEntryByEmail, submitEntry } from "@/lib/supabase";
 import { createEmptyPicks } from "@/lib/emptyPicks";
+import { isBeforeDeadline } from "@/lib/deadline";
 
 type Step = "email" | "pin" | "register";
 
 export default function Home() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("email");
+  const [checking, setChecking] = useState(true);
+
+  // Auto-redirect if already logged in
+  useEffect(() => {
+    const stored = localStorage.getItem("bracket_user");
+    if (stored) {
+      router.replace(isBeforeDeadline() ? "/bracket" : "/scoreboard");
+    } else {
+      setChecking(false);
+    }
+  }, [router]);
   const [email, setEmail] = useState("");
   const [pin, setPin] = useState("");
   const [name, setName] = useState("");
@@ -107,6 +119,8 @@ export default function Home() {
       setLoading(false);
     }
   };
+
+  if (checking) return null;
 
   return (
     <div className="landing-page">
