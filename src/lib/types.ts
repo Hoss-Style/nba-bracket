@@ -72,9 +72,9 @@ export type RoundName = "R1" | "R2" | "CF" | "Finals";
 
 export const ROUND_POINTS: Record<RoundName, { winner: number; games: number; upset: number }> = {
   R1: { winner: 1, games: 1, upset: 1 },
-  R2: { winner: 2, games: 2, upset: 2 },
-  CF: { winner: 3, games: 3, upset: 3 },
-  Finals: { winner: 5, games: 5, upset: 5 },
+  R2: { winner: 3, games: 2, upset: 3 },
+  CF: { winner: 6, games: 3, upset: 6 },
+  Finals: { winner: 12, games: 5, upset: 12 },
 };
 
-export const FINALS_MVP_POINTS = 10;
+export const FINALS_MVP_POINTS = 15;

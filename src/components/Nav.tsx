@@ -77,12 +77,12 @@ export default function Nav() {
               </thead>
               <tbody>
                 <tr><td>First Round</td><td>1 pt</td><td>1 pt</td><td>1 pt</td></tr>
-                <tr><td>Conf. Semis</td><td>2 pts</td><td>2 pts</td><td>2 pts</td></tr>
-                <tr><td>Conf. Finals</td><td>3 pts</td><td>3 pts</td><td>3 pts</td></tr>
-                <tr><td>NBA Finals</td><td>5 pts</td><td>5 pts</td><td>5 pts</td></tr>
+                <tr><td>Conf. Semis</td><td>3 pts</td><td>2 pts</td><td>3 pts</td></tr>
+                <tr><td>Conf. Finals</td><td>6 pts</td><td>3 pts</td><td>6 pts</td></tr>
+                <tr><td>NBA Finals</td><td>12 pts</td><td>5 pts</td><td>12 pts</td></tr>
                 <tr>
                   <td>Finals MVP</td>
-                  <td colSpan={3} style={{ fontWeight: 700, color: "var(--accent-gold)" }}>10 pts</td>
+                  <td colSpan={3} style={{ fontWeight: 700, color: "var(--accent-gold)" }}>15 pts</td>
                 </tr>
               </tbody>
             </table>
