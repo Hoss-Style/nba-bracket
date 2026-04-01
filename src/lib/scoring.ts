@@ -1,4 +1,4 @@
-import { BracketPicks, MatchupPick, ScoreBreakdown, ROUND_POINTS, FINALS_MVP_POINTS, RoundName } from "./types";
+import { BracketPicks, MatchupPick, MatchupResultStatus, ScoreBreakdown, ROUND_POINTS, FINALS_MVP_POINTS, RoundName } from "./types";
 import { getTeamByAbbr, isUpset } from "./teams";
 
 const MATCHUP_ROUNDS: Record<string, RoundName> = {
@@ -48,6 +48,31 @@ function getOpponentSeed(matchupId: string, winnerAbbr: string, actualResults: B
     return getTeamSeed(opponent);
   }
   return 0;
+}
+
+export function getMatchupStatuses(
+  playerPicks: BracketPicks,
+  actualResults: BracketPicks
+): Record<string, MatchupResultStatus> {
+  const statuses: Record<string, MatchupResultStatus> = {};
+  const matchupIds = Object.keys(MATCHUP_ROUNDS);
+
+  for (const matchupId of matchupIds) {
+    const playerPick = playerPicks[matchupId as keyof BracketPicks] as MatchupPick | null;
+    const actualResult = actualResults[matchupId as keyof BracketPicks] as MatchupPick | null;
+
+    if (!actualResult || !playerPick) {
+      statuses[matchupId] = null;
+      continue;
+    }
+
+    statuses[matchupId] = {
+      winnerCorrect: playerPick.winner === actualResult.winner,
+      gamesCorrect: playerPick.games === actualResult.games,
+    };
+  }
+
+  return statuses;
 }
 
 export function calculateScore(

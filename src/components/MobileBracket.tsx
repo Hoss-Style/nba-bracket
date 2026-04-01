@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { BracketPicks, MatchupPick, Team } from "@/lib/types";
+import { BracketPicks, MatchupPick, MatchupResultStatus, Team } from "@/lib/types";
 import { WEST_TEAMS, EAST_TEAMS, getTeamByAbbr } from "@/lib/teams";
 import { searchPlayers } from "@/lib/players";
 
@@ -11,6 +11,8 @@ interface MobileBracketProps {
   disabled?: boolean;
   finalsMVP: string;
   onFinalsMVPChange: (mvp: string) => void;
+  matchupStatuses?: Record<string, MatchupResultStatus> | null;
+  mvpCorrect?: boolean | null;
 }
 
 interface MatchupDef {
@@ -56,6 +58,8 @@ export default function MobileBracket({
   disabled,
   finalsMVP,
   onFinalsMVPChange,
+  matchupStatuses,
+  mvpCorrect,
 }: MobileBracketProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [mvpQuery, setMvpQuery] = useState("");
@@ -218,11 +222,19 @@ export default function MobileBracket({
       );
     }
 
-    const color = getHighlightColor(team);
+    const status = matchupStatuses?.[matchupKey] ?? undefined;
+    const hasResult = isSelected && status;
+    const resultColor = hasResult
+      ? (status.winnerCorrect ? "var(--accent-green)" : "var(--accent-red)")
+      : null;
+    const teamColor = getHighlightColor(team);
+    const color = resultColor || teamColor;
 
     return (
       <button
-        className={`mobile-team-btn ${isSelected ? "mobile-team-btn-selected" : ""}`}
+        className={`mobile-team-btn ${isSelected ? "mobile-team-btn-selected" : ""} ${
+          hasResult ? (status.winnerCorrect ? "mobile-team-btn-correct" : "mobile-team-btn-incorrect") : ""
+        }`}
         style={isSelected ? {
           borderColor: color,
           background: `${color}18`,
@@ -240,8 +252,16 @@ export default function MobileBracket({
         <span className="mobile-team-seed" style={isSelected ? { background: color, color: "#fff" } : {}}>
           {team.seed}
         </span>
-        <span className="mobile-team-name">{team.name}</span>
-        {isSelected && <span className="mobile-team-check">&#10003;</span>}
+        <span className={`mobile-team-name ${hasResult && !status.winnerCorrect ? "mobile-team-name-wrong" : ""}`}>
+          {team.name}
+        </span>
+        {isSelected && (
+          hasResult
+            ? <span className={`matchup-result-icon ${status.winnerCorrect ? "matchup-result-correct" : "matchup-result-incorrect"}`}>
+                {status.winnerCorrect ? "\u2713" : "\u2717"}
+              </span>
+            : <span className="mobile-team-check">&#10003;</span>
+        )}
       </button>
     );
   };
@@ -250,6 +270,8 @@ export default function MobileBracket({
     const pick = picks[matchupKey] as MatchupPick | null;
     if (!pick) return null;
 
+    const status = matchupStatuses?.[matchupKey] ?? undefined;
+
     return (
       <div className="mobile-games">
         <span className="mobile-games-label">Series length:</span>
@@ -257,7 +279,11 @@ export default function MobileBracket({
           {[4, 5, 6, 7].map((g) => (
             <button
               key={g}
-              className={`mobile-games-btn ${pick.games === g ? "mobile-games-btn-active" : ""}`}
+              className={`mobile-games-btn ${pick.games === g ? "mobile-games-btn-active" : ""} ${
+                pick.games === g && status?.winnerCorrect
+                  ? (status.gamesCorrect ? "mobile-games-btn-correct" : "mobile-games-btn-incorrect")
+                  : ""
+              }`}
               onClick={() => {
                 if (disabled) return;
                 updatePick(matchupKey, { ...pick, games: g });
@@ -320,12 +346,19 @@ export default function MobileBracket({
               <div style={{ textAlign: "center" }}>
                 <div className="mvp-selected">
                   <span>{finalsMVP}</span>
-                  <button
-                    className="mvp-selected-clear"
-                    onClick={() => { onFinalsMVPChange(""); setMvpQuery(""); }}
-                  >
-                    &times;
-                  </button>
+                  {mvpCorrect !== null && mvpCorrect !== undefined && (
+                    <span className={`matchup-result-icon ${mvpCorrect ? "matchup-result-correct" : "matchup-result-incorrect"}`}>
+                      {mvpCorrect ? " \u2713" : " \u2717"}
+                    </span>
+                  )}
+                  {!disabled && (
+                    <button
+                      className="mvp-selected-clear"
+                      onClick={() => { onFinalsMVPChange(""); setMvpQuery(""); }}
+                    >
+                      &times;
+                    </button>
+                  )}
                 </div>
               </div>
             ) : (

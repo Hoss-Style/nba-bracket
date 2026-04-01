@@ -5,8 +5,9 @@ import { useParams } from "next/navigation";
 import Nav from "@/components/Nav";
 import Bracket from "@/components/Bracket";
 import MobileBracket from "@/components/MobileBracket";
-import { Entry } from "@/lib/types";
-import { getEntryById } from "@/lib/supabase";
+import { Entry, MatchupResultStatus } from "@/lib/types";
+import { getEntryById, getActualResults } from "@/lib/supabase";
+import { getMatchupStatuses } from "@/lib/scoring";
 
 export default function ViewBracketPage() {
   const params = useParams();
@@ -14,13 +15,26 @@ export default function ViewBracketPage() {
   const [entry, setEntry] = useState<Entry | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [matchupStatuses, setMatchupStatuses] = useState<Record<string, MatchupResultStatus> | null>(null);
+  const [mvpCorrect, setMvpCorrect] = useState<boolean | null>(null);
 
   useEffect(() => {
     async function load() {
       try {
-        const result = await getEntryById(id);
+        const [result, actualResults] = await Promise.all([
+          getEntryById(id),
+          getActualResults(),
+        ]);
         if (result) {
           setEntry(result);
+          if (actualResults) {
+            setMatchupStatuses(getMatchupStatuses(result.picks, actualResults.picks));
+            if (actualResults.finalsMVP && result.picks.finalsMVP) {
+              setMvpCorrect(
+                result.picks.finalsMVP.toLowerCase().trim() === actualResults.finalsMVP.toLowerCase().trim()
+              );
+            }
+          }
         } else {
           setError(true);
         }
@@ -65,6 +79,8 @@ export default function ViewBracketPage() {
                   disabled={true}
                   finalsMVP={entry.picks.finalsMVP || ""}
                   onFinalsMVPChange={noop}
+                  matchupStatuses={matchupStatuses}
+                  mvpCorrect={mvpCorrect}
                 />
               </div>
               <div className="mobile-bracket-wrapper">
@@ -74,6 +90,8 @@ export default function ViewBracketPage() {
                   disabled={true}
                   finalsMVP={entry.picks.finalsMVP || ""}
                   onFinalsMVPChange={noop}
+                  matchupStatuses={matchupStatuses}
+                  mvpCorrect={mvpCorrect}
                 />
               </div>
             </>

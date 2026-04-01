@@ -1875,3 +1875,54 @@ body {
 .scoreboard-row:hover {
   background: var(--bg-card-hover);
 }
+
+/* === Result Indicators (correct/incorrect picks) === */
+
+.matchup-name-wrong {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.matchup-result-icon {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-left: 0.25rem;
+}
+
+.matchup-result-correct {
+  color: var(--accent-green);
+}
+
+.matchup-result-incorrect {
+  color: var(--accent-red);
+}
+
+.games-btn-correct {
+  background: var(--accent-green) !important;
+  border-color: var(--accent-green) !important;
+  color: #fff !important;
+}
+
+.games-btn-incorrect {
+  background: var(--accent-red) !important;
+  border-color: var(--accent-red) !important;
+  color: #fff !important;
+}
+
+/* Mobile result styling */
+.mobile-team-name-wrong {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.mobile-games-btn-correct {
+  background: var(--accent-green) !important;
+  border-color: var(--accent-green) !important;
+  color: #fff !important;
+}
+
+.mobile-games-btn-incorrect {
+  background: var(--accent-red) !important;
+  border-color: var(--accent-red) !important;
+  color: #fff !important;
+}

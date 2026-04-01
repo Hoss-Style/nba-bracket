@@ -9,11 +9,12 @@ interface MatchupCardProps {
   onPick: (pick: MatchupPick) => void;
   disabled?: boolean;
   compact?: boolean;
+  resultStatus?: { winnerCorrect: boolean; gamesCorrect: boolean };
 }
 
 const GAME_OPTIONS = [4, 5, 6, 7];
 
-export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disabled, compact }: MatchupCardProps) {
+export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disabled, compact, resultStatus }: MatchupCardProps) {
   const handleTeamClick = (team: Team) => {
     if (disabled) return;
     if (pick?.winner === team.abbreviation) return; // already selected
@@ -59,26 +60,67 @@ export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disable
     return lighten(base, 80);
   };
 
+  // Determine result-aware colors
+  const getResultColor = (isSelected: boolean) => {
+    if (!resultStatus || !isSelected) return null;
+    return resultStatus.winnerCorrect ? "var(--accent-green)" : "var(--accent-red)";
+  };
+
+  const getTeamStyle = (isSelected: boolean, team: Team | null) => {
+    if (!isSelected || !team) return {};
+    const color = getResultColor(isSelected);
+    if (color) {
+      return { borderColor: color, background: `${color}18` };
+    }
+    return { borderColor: getHighlightColor(team), background: `${getHighlightColor(team)}18` };
+  };
+
+  const getSeedStyle = (isSelected: boolean, team: Team | null) => {
+    if (!isSelected || !team) return {};
+    const color = getResultColor(isSelected);
+    if (color) {
+      return { background: color, color: "#fff" };
+    }
+    return { background: getHighlightColor(team), color: "#fff" };
+  };
+
+  const getCardStyle = () => {
+    if (!selectedTeam) return {};
+    const color = getResultColor(true);
+    if (color) {
+      return { borderColor: color, boxShadow: `0 0 12px ${color}40, inset 0 0 12px ${color}08` };
+    }
+    return {
+      borderColor: getHighlightColor(selectedTeam),
+      boxShadow: `0 0 12px ${getHighlightColor(selectedTeam)}40, inset 0 0 12px ${getHighlightColor(selectedTeam)}08`,
+    };
+  };
+
   return (
     <div
       className={`matchup-card ${compact ? "matchup-compact" : ""} ${selectedTeam ? "matchup-card-selected" : ""}`}
-      style={selectedTeam ? {
-        borderColor: getHighlightColor(selectedTeam),
-        boxShadow: `0 0 12px ${getHighlightColor(selectedTeam)}40, inset 0 0 12px ${getHighlightColor(selectedTeam)}08`,
-      } : {}}
+      style={getCardStyle()}
     >
       {/* Top Team */}
       <button
         onClick={() => topTeam && handleTeamClick(topTeam)}
         disabled={disabled || !topTeam}
-        className={`matchup-team ${isTopSelected ? "matchup-team-selected" : ""} matchup-team-top`}
-        style={isTopSelected && topTeam ? { borderColor: getHighlightColor(topTeam), background: `${getHighlightColor(topTeam)}18` } : {}}
+        className={`matchup-team ${isTopSelected ? "matchup-team-selected" : ""} matchup-team-top ${
+          isTopSelected && resultStatus ? (resultStatus.winnerCorrect ? "matchup-team-correct" : "matchup-team-incorrect") : ""
+        }`}
+        style={getTeamStyle(isTopSelected, topTeam)}
       >
         {topTeam ? (
           <>
-            <span className="matchup-seed" style={isTopSelected ? { background: getHighlightColor(topTeam), color: "#fff" } : {}}>{topTeam.seed}</span>
-            <span className="matchup-name">{topTeam.name}</span>
-            {isTopSelected && <span className="matchup-check">&#10003;</span>}
+            <span className="matchup-seed" style={getSeedStyle(isTopSelected, topTeam)}>{topTeam.seed}</span>
+            <span className={`matchup-name ${isTopSelected && resultStatus && !resultStatus.winnerCorrect ? "matchup-name-wrong" : ""}`}>{topTeam.name}</span>
+            {isTopSelected && (
+              resultStatus
+                ? <span className={`matchup-result-icon ${resultStatus.winnerCorrect ? "matchup-result-correct" : "matchup-result-incorrect"}`}>
+                    {resultStatus.winnerCorrect ? "\u2713" : "\u2717"}
+                  </span>
+                : <span className="matchup-check">&#10003;</span>
+            )}
           </>
         ) : (
           <span className="matchup-tbd">TBD</span>
@@ -89,14 +131,22 @@ export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disable
       <button
         onClick={() => bottomTeam && handleTeamClick(bottomTeam)}
         disabled={disabled || !bottomTeam}
-        className={`matchup-team ${isBottomSelected ? "matchup-team-selected" : ""} matchup-team-bottom`}
-        style={isBottomSelected && bottomTeam ? { borderColor: getHighlightColor(bottomTeam), background: `${getHighlightColor(bottomTeam)}18` } : {}}
+        className={`matchup-team ${isBottomSelected ? "matchup-team-selected" : ""} matchup-team-bottom ${
+          isBottomSelected && resultStatus ? (resultStatus.winnerCorrect ? "matchup-team-correct" : "matchup-team-incorrect") : ""
+        }`}
+        style={getTeamStyle(isBottomSelected, bottomTeam)}
       >
         {bottomTeam ? (
           <>
-            <span className="matchup-seed" style={isBottomSelected ? { background: getHighlightColor(bottomTeam), color: "#fff" } : {}}>{bottomTeam.seed}</span>
-            <span className="matchup-name">{bottomTeam.name}</span>
-            {isBottomSelected && <span className="matchup-check">&#10003;</span>}
+            <span className="matchup-seed" style={getSeedStyle(isBottomSelected, bottomTeam)}>{bottomTeam.seed}</span>
+            <span className={`matchup-name ${isBottomSelected && resultStatus && !resultStatus.winnerCorrect ? "matchup-name-wrong" : ""}`}>{bottomTeam.name}</span>
+            {isBottomSelected && (
+              resultStatus
+                ? <span className={`matchup-result-icon ${resultStatus.winnerCorrect ? "matchup-result-correct" : "matchup-result-incorrect"}`}>
+                    {resultStatus.winnerCorrect ? "\u2713" : "\u2717"}
+                  </span>
+                : <span className="matchup-check">&#10003;</span>
+            )}
           </>
         ) : (
           <span className="matchup-tbd">TBD</span>
@@ -112,7 +162,11 @@ export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disable
               key={g}
               onClick={() => handleGamesChange(g)}
               disabled={disabled}
-              className={`games-btn ${pick.games === g ? "games-btn-active" : ""}`}
+              className={`games-btn ${pick.games === g ? "games-btn-active" : ""} ${
+                pick.games === g && resultStatus?.winnerCorrect
+                  ? (resultStatus.gamesCorrect ? "games-btn-correct" : "games-btn-incorrect")
+                  : ""
+              }`}
             >
               {g}
             </button>

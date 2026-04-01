@@ -68,6 +68,11 @@ export interface LeaderboardEntry {
   rank: number;
 }
 
+export type MatchupResultStatus = {
+  winnerCorrect: boolean;
+  gamesCorrect: boolean;
+} | null;
+
 export type RoundName = "R1" | "R2" | "CF" | "Finals";
 
 export const ROUND_POINTS: Record<RoundName, { winner: number; games: number; upset: number }> = {
