@@ -19,6 +19,13 @@ export default function Home() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const formatPhone = (value: string): string => {
+    const digits = value.replace(/\D/g, "").slice(0, 10);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  };
+
   const handleEmailCheck = async () => {
     if (!email.trim()) { setError("Enter your email."); return; }
     setLoading(true);
@@ -71,7 +78,7 @@ export default function Home() {
   const handleRegister = async () => {
     if (!name.trim()) { setError("Enter your name."); return; }
     if (!phone.trim()) { setError("Enter your phone number."); return; }
-    if (!newPin.trim() || newPin.length < 4) { setError("PIN must be at least 4 digits."); return; }
+    if (newPin.length !== 4) { setError("PIN must be exactly 4 digits."); return; }
     setLoading(true);
     setError("");
     try {
@@ -152,11 +159,12 @@ export default function Home() {
               <div className="form-group">
                 <input
                   type="password"
+                  inputMode="numeric"
                   className="form-input"
                   placeholder="4-digit PIN"
                   value={pin}
-                  maxLength={8}
-                  onChange={(e) => setPin(e.target.value)}
+                  maxLength={4}
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
                   onKeyDown={(e) => e.key === "Enter" && handlePinLogin()}
                 />
               </div>
@@ -193,20 +201,23 @@ export default function Home() {
               <div className="form-group">
                 <input
                   type="tel"
+                  inputMode="numeric"
                   className="form-input"
                   placeholder="Phone number"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  maxLength={14}
+                  onChange={(e) => setPhone(formatPhone(e.target.value))}
                 />
               </div>
               <div className="form-group">
                 <input
                   type="password"
+                  inputMode="numeric"
                   className="form-input"
                   placeholder="Create a 4-digit PIN"
                   value={newPin}
-                  maxLength={8}
-                  onChange={(e) => setNewPin(e.target.value)}
+                  maxLength={4}
+                  onChange={(e) => setNewPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
                   onKeyDown={(e) => e.key === "Enter" && handleRegister()}
                 />
               </div>
