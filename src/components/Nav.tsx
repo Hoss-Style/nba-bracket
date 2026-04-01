@@ -89,9 +89,6 @@ export default function Nav() {
             <div style={{ marginTop: "1rem", fontSize: "0.75rem", color: "var(--text-muted)", textAlign: "center" }}>
               Upset bonus: lower seed beats higher seed. Games points only awarded if winner is correct.
             </div>
-            <div style={{ marginTop: "1.25rem", padding: "0.75rem", background: "rgba(255,255,255,0.03)", borderRadius: "8px", fontSize: "0.8rem", color: "var(--text-secondary)" }}>
-              <strong style={{ color: "var(--accent-gold)" }}>$25 entry fee</strong> &mdash; 1st: 65% &bull; 2nd: 25% &bull; 3rd: 10%. Bonus $100 added if 15+ entries.
-            </div>
           </div>
         </div>
       )}
