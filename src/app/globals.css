@@ -472,6 +472,91 @@ body {
   background: rgba(229, 96, 32, 0.12);
 }
 
+/* Hamburger button - hidden on desktop */
+.nav-hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.hamburger-line {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--text-secondary);
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+.hamburger-line.hamburger-open:nth-child(1) {
+  transform: rotate(45deg) translate(4px, 4px);
+}
+
+.hamburger-line.hamburger-open:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-line.hamburger-open:nth-child(3) {
+  transform: rotate(-45deg) translate(4px, -4px);
+}
+
+/* Mobile menu overlay */
+.mobile-menu-overlay {
+  position: fixed;
+  inset: 0;
+  top: 52px;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 99;
+  animation: fadeIn 0.15s ease;
+}
+
+.mobile-menu {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-menu-link {
+  display: block;
+  padding: 0.85rem 1rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.mobile-menu-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+.mobile-menu-link-active {
+  color: var(--accent-orange);
+  background: rgba(229, 96, 32, 0.12);
+}
+
+/* Submit button pulse animation */
+.submit-btn-pulse {
+  animation: submitPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes submitPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(229, 96, 32, 0.4); }
+  50% { box-shadow: 0 0 20px 6px rgba(229, 96, 32, 0.3); }
+}
+
 /* ========== BRACKET ========== */
 .bracket-container {
   display: flex;
@@ -1110,6 +1195,16 @@ body {
 
 /* ========== MOBILE NAV (<=768px) ========== */
 @media (max-width: 768px) {
+  /* Hide scrollbars on mobile but keep scrolling */
+  html, body {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none;
+  }
+
   .nav {
     padding: 0.5rem 0.75rem;
     flex-wrap: wrap;
@@ -1128,19 +1223,17 @@ body {
     display: none !important;
   }
 
-  .nav-links {
-    gap: 0.125rem;
+  /* Hide desktop nav links, show hamburger */
+  .nav-links-desktop {
+    display: none !important;
   }
 
-  .nav-link {
-    padding: 0.35rem 0.5rem;
-    font-size: 0.75rem;
-    border-radius: 6px;
+  .nav-hamburger {
+    display: flex !important;
   }
 
-  .nav-rules-btn {
-    padding: 0.35rem 0.5rem !important;
-    font-size: 0.75rem !important;
+  .nav {
+    flex-wrap: nowrap;
   }
 
   .page-container {

@@ -26,6 +26,7 @@ export default function BracketPage() {
   const [error, setError] = useState("");
   const [user, setUser] = useState<BracketUser | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
+  const [onMvpStep, setOnMvpStep] = useState(false);
 
   // Deadline
   const [locked, setLocked] = useState(!isBeforeDeadline());
@@ -191,6 +192,7 @@ export default function BracketPage() {
               onPicksChange={setPicks}
               finalsMVP={finalsMVP}
               onFinalsMVPChange={setFinalsMVP}
+              onStepChange={(step, total) => setOnMvpStep(step === total - 1)}
             />
           </div>
 
@@ -199,7 +201,7 @@ export default function BracketPage() {
             <button
               onClick={handleSubmit}
               disabled={!allComplete || submitting}
-              className={`btn submit-btn ${allComplete ? "btn-accent" : "btn-secondary"}`}
+              className={`btn submit-btn ${allComplete ? "btn-accent" : "btn-secondary"} ${allComplete && onMvpStep ? "submit-btn-pulse" : ""}`}
               style={{ opacity: allComplete ? 1 : 0.6, width: "100%" }}
             >
               {submitting

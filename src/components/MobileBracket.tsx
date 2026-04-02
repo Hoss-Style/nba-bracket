@@ -13,6 +13,7 @@ interface MobileBracketProps {
   onFinalsMVPChange: (mvp: string) => void;
   matchupStatuses?: Record<string, MatchupResultStatus> | null;
   mvpCorrect?: boolean | null;
+  onStepChange?: (step: number, totalSteps: number) => void;
 }
 
 interface MatchupDef {
@@ -60,6 +61,7 @@ export default function MobileBracket({
   onFinalsMVPChange,
   matchupStatuses,
   mvpCorrect,
+  onStepChange,
 }: MobileBracketProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [mvpQuery, setMvpQuery] = useState("");
@@ -75,6 +77,11 @@ export default function MobileBracket({
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  // Notify parent of step changes
+  useEffect(() => {
+    onStepChange?.(currentStep, 7);
+  }, [currentStep, onStepChange]);
 
   const updatePick = (key: keyof BracketPicks, pick: MatchupPick) => {
     if (disabled) return;

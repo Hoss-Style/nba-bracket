@@ -11,6 +11,7 @@ export default function Nav() {
 
   const [countdown, setCountdown] = useState(getTimeUntilDeadline());
   const [showRules, setShowRules] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!isBracketPage) return;
@@ -19,6 +20,11 @@ export default function Nav() {
     }, 1000);
     return () => clearInterval(interval);
   }, [isBracketPage]);
+
+  // Close menu on route change
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
 
   const links = [
     { href: "/", label: "Home" },
@@ -39,17 +45,15 @@ export default function Nav() {
             <strong>{countdown.days}d {countdown.hours}h {countdown.minutes}m</strong>
           </div>
         )}
-        <div className="nav-links">
+        {/* Desktop nav links */}
+        <div className="nav-links nav-links-desktop">
           {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               className={`nav-link ${pathname === link.href ? "nav-link-active" : ""}`}
             >
-              <span className="nav-link-full">{link.label}</span>
-              <span className="nav-link-short">
-                {link.label === "Make Picks" ? "Picks" : link.label === "Scoreboard" ? "Scores" : link.label}
-              </span>
+              {link.label}
             </Link>
           ))}
           <button
@@ -59,7 +63,41 @@ export default function Nav() {
             Rules
           </button>
         </div>
+        {/* Mobile hamburger button */}
+        <button
+          className="nav-hamburger"
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Menu"
+        >
+          <span className={`hamburger-line ${menuOpen ? "hamburger-open" : ""}`} />
+          <span className={`hamburger-line ${menuOpen ? "hamburger-open" : ""}`} />
+          <span className={`hamburger-line ${menuOpen ? "hamburger-open" : ""}`} />
+        </button>
       </nav>
+
+      {/* Mobile menu overlay */}
+      {menuOpen && (
+        <div className="mobile-menu-overlay" onClick={() => setMenuOpen(false)}>
+          <div className="mobile-menu" onClick={(e) => e.stopPropagation()}>
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`mobile-menu-link ${pathname === link.href ? "mobile-menu-link-active" : ""}`}
+                onClick={() => setMenuOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <button
+              className="mobile-menu-link"
+              onClick={() => { setShowRules(true); setMenuOpen(false); }}
+            >
+              Rules
+            </button>
+          </div>
+        </div>
+      )}
 
       {showRules && (
         <div className="modal-overlay" onClick={() => setShowRules(false)}>
