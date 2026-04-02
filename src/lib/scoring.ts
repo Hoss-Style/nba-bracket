@@ -75,6 +75,46 @@ export function getMatchupStatuses(
   return statuses;
 }
 
+export function calculateMaxPotential(
+  playerPicks: BracketPicks,
+  actualResults: BracketPicks,
+  actualMVP: string
+): number {
+  // Start with current score
+  const current = calculateScore(playerPicks, actualResults, actualMVP);
+  let maxRemaining = current.total;
+
+  const matchupIds = Object.keys(MATCHUP_ROUNDS) as (keyof BracketPicks)[];
+
+  for (const matchupId of matchupIds) {
+    const playerPick = playerPicks[matchupId] as MatchupPick | null;
+    const actualResult = actualResults[matchupId] as MatchupPick | null;
+
+    // Only count undecided matchups where the player made a pick
+    if (!playerPick || actualResult) continue;
+
+    const round = MATCHUP_ROUNDS[matchupId];
+    const points = ROUND_POINTS[round];
+
+    // Best case: winner correct + games correct
+    maxRemaining += points.winner + points.games;
+
+    // Upset bonus if their pick would be an upset
+    const winnerSeed = getTeamSeed(playerPick.winner);
+    const opponentSeed = getOpponentSeed(matchupId, playerPick.winner, playerPicks);
+    if (opponentSeed > 0 && isUpset(winnerSeed, opponentSeed)) {
+      maxRemaining += points.upset;
+    }
+  }
+
+  // Finals MVP if not yet decided
+  if (playerPicks.finalsMVP && !actualMVP) {
+    maxRemaining += FINALS_MVP_POINTS;
+  }
+
+  return maxRemaining;
+}
+
 export function calculateScore(
   playerPicks: BracketPicks,
   actualResults: BracketPicks,

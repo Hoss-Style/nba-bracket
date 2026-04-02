@@ -1074,6 +1074,23 @@ body {
   opacity: 0.4;
   cursor: not-allowed;
   font-size: 0.7rem !important;
+  position: relative;
+}
+
+.scoreboard-locked-btn[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 30, 30, 0.95);
+  color: var(--text-secondary);
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 100;
 }
 
 .rank-badge {
@@ -1113,6 +1130,12 @@ body {
   background: var(--gradient-accent);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+.score-max-potential {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-muted);
   background-clip: text;
 }
 
@@ -2059,7 +2082,7 @@ body {
 
 @media (max-width: 1024px) {
   .readonly-bracket-scroll {
-    overflow-x: auto;
+    overflow: hidden;
     padding-bottom: 1rem;
   }
 
@@ -2068,8 +2091,10 @@ body {
     flex-direction: row;
     align-items: flex-start;
     gap: 0;
-    min-width: 900px;
-    zoom: 0.55;
+    width: 1200px;
+    height: 820px;
+    transform: scale(var(--bracket-scale, 0.34));
+    transform-origin: top left;
   }
 
   .readonly-bracket-scroll .bracket-conference {
@@ -2097,13 +2122,8 @@ body {
     order: 0;
   }
 
-  /* Tighten spacing at small scale */
   .readonly-bracket-scroll .bracket-round {
-    min-width: 130px;
-  }
-
-  .readonly-bracket-scroll .matchup-card {
-    border-radius: 8px;
+    min-width: 140px;
   }
 }
 

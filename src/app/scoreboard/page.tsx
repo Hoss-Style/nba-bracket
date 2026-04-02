@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Nav from "@/components/Nav";
 import { ScoreBreakdown, BracketPicks } from "@/lib/types";
 import { getAllEntries, getActualResults } from "@/lib/supabase";
-import { calculateScore } from "@/lib/scoring";
+import { calculateScore, calculateMaxPotential } from "@/lib/scoring";
 import { getTeamByAbbr } from "@/lib/teams";
 import { isBeforeDeadline } from "@/lib/deadline";
 
@@ -13,6 +13,7 @@ interface RankedEntry {
   name: string;
   email: string;
   score: ScoreBreakdown;
+  maxPotential: number;
   champion: string;
   finalsMVP: string;
   picks: BracketPicks;
@@ -47,12 +48,14 @@ export default function ScoreboardPage() {
           const ranked = allEntries
             .map((entry) => {
               const score = calculateScore(entry.picks, results.picks, results.finalsMVP);
+              const maxPotential = calculateMaxPotential(entry.picks, results.picks, results.finalsMVP);
               const champion = entry.picks.finals?.winner || "—";
               return {
                 id: entry.id || "",
                 name: entry.name,
                 email: entry.email,
                 score,
+                maxPotential,
                 champion: getTeamByAbbr(champion)?.name || champion,
                 finalsMVP: entry.picks.finalsMVP || "—",
                 picks: entry.picks,
@@ -68,6 +71,7 @@ export default function ScoreboardPage() {
               name: entry.name,
               email: entry.email,
               score: { correctWinners: 0, correctGames: 0, upsetBonuses: 0, finalsMVP: 0, total: 0 },
+              maxPotential: 0,
               champion: getTeamByAbbr(champion)?.name || champion,
               finalsMVP: entry.picks.finalsMVP || "—",
               picks: entry.picks,
@@ -126,6 +130,7 @@ export default function ScoreboardPage() {
                       </>
                     )}
                     <th>{hasResults ? "Pts" : "Total"}</th>
+                    {hasResults && <th className="scoreboard-hide-mobile">Max</th>}
                     <th style={{ width: "70px" }}></th>
                   </tr>
                 </thead>
@@ -165,6 +170,11 @@ export default function ScoreboardPage() {
                           {hasResults ? entry.score.total : "—"}
                         </span>
                       </td>
+                      {hasResults && (
+                        <td className="scoreboard-hide-mobile">
+                          <span className="score-max-potential">{entry.maxPotential}</span>
+                        </td>
+                      )}
                       <td>
                         {entry.id && (
                           (!beforeDeadline || entry.email === currentUserEmail) ? (
@@ -172,7 +182,7 @@ export default function ScoreboardPage() {
                               View
                             </a>
                           ) : (
-                            <span className="btn btn-secondary btn-sm scoreboard-view-btn scoreboard-locked-btn" title="Locked until tipoff">
+                            <span className="btn btn-secondary btn-sm scoreboard-view-btn scoreboard-locked-btn" data-tooltip="Locked until tipoff">
                               &#128274;
                             </span>
                           )
