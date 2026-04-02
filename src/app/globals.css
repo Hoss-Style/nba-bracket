@@ -2058,16 +2058,18 @@ body {
 }
 
 @media (max-width: 1024px) {
-  /* Override the stacking behavior inside the readonly scroll container */
+  .readonly-bracket-scroll {
+    overflow-x: auto;
+    padding-bottom: 1rem;
+  }
+
+  /* Override the stacking behavior — keep horizontal bracket layout */
   .readonly-bracket-scroll .bracket-container {
     flex-direction: row;
     align-items: flex-start;
     gap: 0;
-    min-width: 1100px;
-    transform: scale(0.45);
-    transform-origin: top left;
-    width: 222%; /* 1/0.45 to compensate for scale */
-    margin-bottom: -55%; /* compensate for visual gap from scale */
+    min-width: 900px;
+    zoom: 0.55;
   }
 
   .readonly-bracket-scroll .bracket-conference {
@@ -2093,6 +2095,15 @@ body {
 
   .readonly-bracket-scroll .bracket-finals {
     order: 0;
+  }
+
+  /* Tighten spacing at small scale */
+  .readonly-bracket-scroll .bracket-round {
+    min-width: 130px;
+  }
+
+  .readonly-bracket-scroll .matchup-card {
+    border-radius: 8px;
   }
 }
 
