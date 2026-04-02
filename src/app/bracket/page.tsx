@@ -9,6 +9,7 @@ import { BracketPicks } from "@/lib/types";
 import { createEmptyPicks, isPicksComplete, countCompletedPicks } from "@/lib/emptyPicks";
 import { getEntryByEmail, updateEntry } from "@/lib/supabase";
 import { isBeforeDeadline } from "@/lib/deadline";
+import confetti from "canvas-confetti";
 
 interface BracketUser {
   id: string;
@@ -93,6 +94,24 @@ export default function BracketPage() {
         });
         if (success) {
           setSubmitted(true);
+          confetti({
+            particleCount: 150,
+            spread: 80,
+            origin: { y: 0.6 },
+            colors: ["#7b2d8e", "#e56020", "#ff8844", "#ffffff"],
+          });
+          setTimeout(() => confetti({
+            particleCount: 80,
+            spread: 100,
+            origin: { x: 0.2, y: 0.5 },
+            colors: ["#7b2d8e", "#e56020", "#ff8844"],
+          }), 300);
+          setTimeout(() => confetti({
+            particleCount: 80,
+            spread: 100,
+            origin: { x: 0.8, y: 0.5 },
+            colors: ["#7b2d8e", "#e56020", "#ff8844"],
+          }), 600);
         } else {
           setError("Failed to save. Try again.");
         }

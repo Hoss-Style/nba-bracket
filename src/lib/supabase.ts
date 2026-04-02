@@ -1,4 +1,4 @@
-import { Entry, BracketPicks } from "./types";
+import { Entry, BracketPicks, Reaction } from "./types";
 
 // Supabase configuration - set these in .env.local
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -175,6 +175,52 @@ export async function saveActualResults(picks: BracketPicks, finalsMVP: string):
     return postRes.ok;
   }
   return true;
+}
+
+// ============ REACTIONS ============
+
+export async function getReactions(entryId: string): Promise<Reaction[]> {
+  if (!isConfigured()) {
+    const stored = localStorage.getItem("bracket_reactions");
+    const all: Reaction[] = stored ? JSON.parse(stored) : [];
+    return all.filter((r) => r.entryId === entryId);
+  }
+
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/reactions?entry_id=eq.${encodeURIComponent(entryId)}&order=created_at.desc`,
+    { headers }
+  );
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.map((row: Record<string, unknown>) => ({
+    id: row.id,
+    entryId: row.entry_id,
+    emoji: row.emoji,
+    userName: row.user_name,
+    createdAt: row.created_at,
+  }));
+}
+
+export async function addReaction(reaction: Omit<Reaction, "id">): Promise<boolean> {
+  if (!isConfigured()) {
+    const stored = localStorage.getItem("bracket_reactions");
+    const all: Reaction[] = stored ? JSON.parse(stored) : [];
+    all.push({ ...reaction, id: crypto.randomUUID() });
+    localStorage.setItem("bracket_reactions", JSON.stringify(all));
+    return true;
+  }
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/reactions`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      entry_id: reaction.entryId,
+      emoji: reaction.emoji,
+      user_name: reaction.userName,
+      created_at: reaction.createdAt,
+    }),
+  });
+  return res.ok;
 }
 
 // ============ LOCAL STORAGE FALLBACK ============

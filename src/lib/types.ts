@@ -83,3 +83,11 @@ export const ROUND_POINTS: Record<RoundName, { winner: number; games: number; up
 };
 
 export const FINALS_MVP_POINTS = 15;
+
+export interface Reaction {
+  id?: string;
+  entryId: string;
+  emoji: string;
+  userName: string;
+  createdAt: string;
+}

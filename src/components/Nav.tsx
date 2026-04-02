@@ -4,11 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { isBeforeDeadline, getTimeUntilDeadline } from "@/lib/deadline";
+import { useTheme } from "@/lib/ThemeContext";
 
 export default function Nav() {
   const pathname = usePathname();
   const isBracketPage = pathname === "/bracket";
 
+  const { theme, toggleTheme } = useTheme();
   const [countdown, setCountdown] = useState(getTimeUntilDeadline());
   const [showRules, setShowRules] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -64,6 +66,13 @@ export default function Nav() {
           >
             Rules
           </button>
+          <button
+            className="nav-link nav-theme-btn"
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? "\u2600\uFE0F" : "\uD83C\uDF19"}
+          </button>
         </div>
         {/* Mobile hamburger button */}
         <button
@@ -96,6 +105,12 @@ export default function Nav() {
               onClick={() => { setShowRules(true); setMenuOpen(false); }}
             >
               Rules
+            </button>
+            <button
+              className="mobile-menu-link"
+              onClick={() => { toggleTheme(); setMenuOpen(false); }}
+            >
+              {theme === "dark" ? "\u2600\uFE0F Light Mode" : "\uD83C\uDF19 Dark Mode"}
             </button>
           </div>
         </div>

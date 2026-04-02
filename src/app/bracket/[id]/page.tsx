@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import Nav from "@/components/Nav";
 import Bracket from "@/components/Bracket";
-import { Entry, MatchupResultStatus } from "@/lib/types";
-import { getEntryById, getActualResults } from "@/lib/supabase";
+import { Entry, Reaction, MatchupResultStatus } from "@/lib/types";
+import { getEntryById, getActualResults, getReactions, addReaction } from "@/lib/supabase";
 import { getMatchupStatuses } from "@/lib/scoring";
 
 export default function ViewBracketPage() {
@@ -16,6 +16,10 @@ export default function ViewBracketPage() {
   const [error, setError] = useState(false);
   const [matchupStatuses, setMatchupStatuses] = useState<Record<string, MatchupResultStatus> | null>(null);
   const [mvpCorrect, setMvpCorrect] = useState<boolean | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [reactions, setReactions] = useState<Reaction[]>([]);
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const bracketRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function load() {
@@ -34,6 +38,9 @@ export default function ViewBracketPage() {
               );
             }
           }
+          // Load reactions
+          const r = await getReactions(result.id || id);
+          setReactions(r);
         } else {
           setError(true);
         }
@@ -47,6 +54,55 @@ export default function ViewBracketPage() {
   }, [id]);
 
   const noop = () => {};
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const input = document.createElement("input");
+      input.value = url;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      document.body.removeChild(input);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleExport = async () => {
+    const el = bracketRef.current;
+    if (!el) return;
+    const html2canvas = (await import("html2canvas")).default;
+    const canvas = await html2canvas(el, {
+      backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--bg-dark").trim(),
+      scale: 2,
+    });
+    const link = document.createElement("a");
+    link.download = `${entry?.name || "bracket"}-picks.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  };
+
+  const EMOJI_OPTIONS = ["\uD83D\uDD25", "\uD83D\uDC80", "\uD83E\uDD21", "\uD83D\uDCAF", "\uD83D\uDE02", "\uD83D\uDE33", "\uD83C\uDFC6", "\uD83D\uDC4D"];
+
+  const handleReaction = async (emoji: string) => {
+    const stored = localStorage.getItem("bracket_user");
+    const userName = stored ? JSON.parse(stored).name : "Anonymous";
+    await addReaction({
+      entryId: entry?.id || id,
+      emoji,
+      userName,
+      createdAt: new Date().toISOString(),
+    });
+    const updated = await getReactions(entry?.id || id);
+    setReactions(updated);
+    setShowReactionPicker(false);
+  };
 
   return (
     <>
@@ -70,8 +126,47 @@ export default function ViewBracketPage() {
               <div className="bracket-view-header">
                 <a href="/scoreboard" className="bracket-view-back">&larr; Scoreboard</a>
                 <span className="bracket-view-name">{entry.name}&apos;s Bracket</span>
+                <div className="bracket-view-actions">
+                  <button onClick={handleShare} className="btn btn-secondary btn-sm">
+                    {copied ? "Copied!" : "Share"}
+                  </button>
+                  <button onClick={handleExport} className="btn btn-secondary btn-sm">
+                    Export
+                  </button>
+                </div>
               </div>
-              <div className="readonly-bracket-scroll">
+
+              {/* Reactions */}
+              <div className="bracket-reactions">
+                <div className="reactions-list">
+                  {(() => {
+                    const counts: Record<string, number> = {};
+                    reactions.forEach((r) => { counts[r.emoji] = (counts[r.emoji] || 0) + 1; });
+                    return Object.entries(counts).map(([emoji, count]) => (
+                      <span key={emoji} className="reaction-badge">
+                        {emoji} {count}
+                      </span>
+                    ));
+                  })()}
+                  <button
+                    className="reaction-add-btn"
+                    onClick={() => setShowReactionPicker(!showReactionPicker)}
+                  >
+                    +
+                  </button>
+                </div>
+                {showReactionPicker && (
+                  <div className="reaction-picker">
+                    {EMOJI_OPTIONS.map((emoji) => (
+                      <button key={emoji} className="reaction-emoji-btn" onClick={() => handleReaction(emoji)}>
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="readonly-bracket-scroll" ref={bracketRef}>
                 <Bracket
                   picks={entry.picks}
                   onPicksChange={noop}
