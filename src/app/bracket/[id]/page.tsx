@@ -93,26 +93,30 @@ export default function ViewBracketPage() {
     if (!el) return;
     setExporting(true);
 
-    // Force full-width desktop layout for capture
-    el.classList.add("export-mode");
-    // Wait for reflow
-    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    try {
+      const { toPng } = await import("html-to-image");
 
-    const html2canvas = (await import("html2canvas")).default;
-    const canvas = await html2canvas(el, {
-      backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--bg-dark").trim(),
-      scale: 2,
-      width: 1400,
-      windowWidth: 1400,
-    });
+      // Force desktop layout for capture
+      el.classList.add("export-mode");
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-    el.classList.remove("export-mode");
+      const dataUrl = await toPng(el, {
+        pixelRatio: 2,
+        backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--bg-dark").trim() || "#0a0a0f",
+      });
+
+      el.classList.remove("export-mode");
+
+      const link = document.createElement("a");
+      link.download = `${entry?.name || "bracket"}-picks.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch {
+      // Fallback: just remove export-mode if something fails
+      el.classList.remove("export-mode");
+    }
+
     setExporting(false);
-
-    const link = document.createElement("a");
-    link.download = `${entry?.name || "bracket"}-picks.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
   };
 
   const EMOJI_OPTIONS = ["\uD83D\uDD25", "\uD83D\uDC80", "\uD83E\uDD21", "\uD83D\uDCAF", "\uD83D\uDE02", "\uD83D\uDE33", "\uD83C\uDFC6", "\uD83D\uDC4D"];
