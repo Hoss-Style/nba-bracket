@@ -74,14 +74,29 @@ export default function ViewBracketPage() {
     }
   };
 
+  const [exporting, setExporting] = useState(false);
+
   const handleExport = async () => {
     const el = bracketRef.current;
     if (!el) return;
+    setExporting(true);
+
+    // Force full-width desktop layout for capture
+    el.classList.add("export-mode");
+    // Wait for reflow
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
     const html2canvas = (await import("html2canvas")).default;
     const canvas = await html2canvas(el, {
       backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--bg-dark").trim(),
       scale: 2,
+      width: 1400,
+      windowWidth: 1400,
     });
+
+    el.classList.remove("export-mode");
+    setExporting(false);
+
     const link = document.createElement("a");
     link.download = `${entry?.name || "bracket"}-picks.png`;
     link.href = canvas.toDataURL("image/png");
@@ -130,8 +145,8 @@ export default function ViewBracketPage() {
                   <button onClick={handleShare} className="btn btn-secondary btn-sm">
                     {copied ? "Copied!" : "Share"}
                   </button>
-                  <button onClick={handleExport} className="btn btn-secondary btn-sm">
-                    Export
+                  <button onClick={handleExport} disabled={exporting} className="btn btn-secondary btn-sm">
+                    {exporting ? "Saving..." : "Export"}
                   </button>
                 </div>
               </div>

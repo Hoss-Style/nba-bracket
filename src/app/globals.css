@@ -2295,3 +2295,67 @@ body {
   padding: 0.25rem 0.4rem !important;
 }
 
+/* Export mode: force full desktop layout for image capture */
+.export-mode {
+  overflow: visible !important;
+  width: 1400px !important;
+}
+
+.export-mode .bracket-container {
+  flex-direction: row !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+.export-mode .bracket-conference {
+  flex: 1 !important;
+  width: auto !important;
+}
+
+.export-mode .bracket-rounds,
+.export-mode .bracket-rounds-reverse {
+  flex-direction: row !important;
+  gap: 0.5rem !important;
+  align-items: stretch !important;
+  flex: 1 !important;
+}
+
+.export-mode .bracket-rounds-reverse {
+  flex-direction: row-reverse !important;
+}
+
+.export-mode .bracket-finals {
+  order: 0 !important;
+}
+
+.export-mode .conference-title-east {
+  text-align: right !important;
+}
+
+.export-mode .bracket-round {
+  min-width: 160px !important;
+}
+
+.export-mode .matchup-name,
+.export-mode .matchup-seed,
+.export-mode .matchup-team,
+.export-mode .games-selector,
+.export-mode .games-btn,
+.export-mode .games-label,
+.export-mode .round-label,
+.export-mode .conference-title,
+.export-mode .conference-title-east,
+.export-mode .finals-trophy,
+.export-mode .finals-title,
+.export-mode .champion-display,
+.export-mode .champion-name,
+.export-mode .mvp-label,
+.export-mode .mvp-selected {
+  font-size: unset !important;
+  width: unset !important;
+  height: unset !important;
+  padding: unset !important;
+}
+
