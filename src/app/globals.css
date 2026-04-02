@@ -2089,10 +2089,9 @@ body {
   /* Override the stacking behavior — keep horizontal bracket layout */
   .readonly-bracket-scroll .bracket-container {
     flex-direction: row;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 0;
     width: 1200px;
-    height: 820px;
     transform: scale(var(--bracket-scale, 0.34));
     transform-origin: top left;
   }
@@ -2108,6 +2107,7 @@ body {
     flex-direction: row;
     gap: 0.5rem;
     align-items: stretch;
+    flex: 1;
   }
 
   .readonly-bracket-scroll .bracket-rounds-reverse {

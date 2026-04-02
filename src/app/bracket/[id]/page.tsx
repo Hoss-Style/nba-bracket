@@ -56,13 +56,17 @@ export default function ViewBracketPage() {
     const bracketEl = wrapper.querySelector(".bracket-container") as HTMLElement;
     if (!bracketEl) return;
     const wrapperWidth = wrapper.clientWidth;
-    // The bracket has a fixed CSS width of 1200px at mobile breakpoint
+    if (wrapperWidth >= 1024) {
+      setWrapperHeight(undefined);
+      return;
+    }
+    // Temporarily remove scale to measure natural height
+    bracketEl.style.setProperty("--bracket-scale", "1");
+    const naturalHeight = bracketEl.scrollHeight;
     const bracketNativeWidth = 1200;
-    if (wrapperWidth >= 1024) return; // desktop, no scaling needed
     const scale = Math.min(wrapperWidth / bracketNativeWidth, 1);
     bracketEl.style.setProperty("--bracket-scale", String(scale));
-    // Set wrapper height to scaled bracket height
-    setWrapperHeight(bracketEl.scrollHeight * scale);
+    setWrapperHeight(naturalHeight * scale);
   }, []);
 
   useEffect(() => {
