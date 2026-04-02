@@ -91,3 +91,11 @@ export interface Reaction {
   userName: string;
   createdAt: string;
 }
+
+export interface Comment {
+  id?: string;
+  entryId: string;
+  userName: string;
+  text: string;
+  createdAt: string;
+}

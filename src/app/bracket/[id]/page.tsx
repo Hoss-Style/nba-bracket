@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import Nav from "@/components/Nav";
 import Bracket from "@/components/Bracket";
-import { Entry, Reaction, MatchupResultStatus } from "@/lib/types";
-import { getEntryById, getActualResults, getReactions, addReaction } from "@/lib/supabase";
+import { Entry, Reaction, Comment, MatchupResultStatus } from "@/lib/types";
+import { getEntryById, getActualResults, getReactions, addReaction, getComments, addComment } from "@/lib/supabase";
 import { getMatchupStatuses } from "@/lib/scoring";
 
 export default function ViewBracketPage() {
@@ -19,6 +19,9 @@ export default function ViewBracketPage() {
   const [copied, setCopied] = useState(false);
   const [reactions, setReactions] = useState<Reaction[]>([]);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentText, setCommentText] = useState("");
+  const [postingComment, setPostingComment] = useState(false);
   const bracketRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,9 +41,13 @@ export default function ViewBracketPage() {
               );
             }
           }
-          // Load reactions
-          const r = await getReactions(result.id || id);
+          // Load reactions and comments
+          const [r, c] = await Promise.all([
+            getReactions(result.id || id),
+            getComments(result.id || id),
+          ]);
           setReactions(r);
+          setComments(c);
         } else {
           setError(true);
         }
@@ -119,6 +126,23 @@ export default function ViewBracketPage() {
     setShowReactionPicker(false);
   };
 
+  const handleComment = async () => {
+    if (!commentText.trim()) return;
+    setPostingComment(true);
+    const stored = localStorage.getItem("bracket_user");
+    const userName = stored ? JSON.parse(stored).name : "Anonymous";
+    await addComment({
+      entryId: entry?.id || id,
+      userName,
+      text: commentText.trim(),
+      createdAt: new Date().toISOString(),
+    });
+    const updated = await getComments(entry?.id || id);
+    setComments(updated);
+    setCommentText("");
+    setPostingComment(false);
+  };
+
   return (
     <>
       <Nav />
@@ -148,37 +172,35 @@ export default function ViewBracketPage() {
                   <button onClick={handleExport} disabled={exporting} className="btn btn-secondary btn-sm">
                     {exporting ? "Saving..." : "Export"}
                   </button>
-                </div>
-              </div>
-
-              {/* Reactions */}
-              <div className="bracket-reactions">
-                <div className="reactions-list">
-                  {(() => {
-                    const counts: Record<string, number> = {};
-                    reactions.forEach((r) => { counts[r.emoji] = (counts[r.emoji] || 0) + 1; });
-                    return Object.entries(counts).map(([emoji, count]) => (
-                      <span key={emoji} className="reaction-badge">
-                        {emoji} {count}
-                      </span>
-                    ));
-                  })()}
-                  <button
-                    className="reaction-add-btn"
-                    onClick={() => setShowReactionPicker(!showReactionPicker)}
-                  >
-                    +
-                  </button>
-                </div>
-                {showReactionPicker && (
-                  <div className="reaction-picker">
-                    {EMOJI_OPTIONS.map((emoji) => (
-                      <button key={emoji} className="reaction-emoji-btn" onClick={() => handleReaction(emoji)}>
-                        {emoji}
+                  <div className="reactions-inline">
+                    {(() => {
+                      const counts: Record<string, number> = {};
+                      reactions.forEach((r) => { counts[r.emoji] = (counts[r.emoji] || 0) + 1; });
+                      return Object.entries(counts).map(([emoji, count]) => (
+                        <span key={emoji} className="reaction-badge">
+                          {emoji} {count}
+                        </span>
+                      ));
+                    })()}
+                    <div className="reaction-add-wrapper">
+                      <button
+                        className="reaction-add-btn"
+                        onClick={() => setShowReactionPicker(!showReactionPicker)}
+                      >
+                        +
                       </button>
-                    ))}
+                      {showReactionPicker && (
+                        <div className="reaction-picker reaction-picker-dropdown">
+                          {EMOJI_OPTIONS.map((emoji) => (
+                            <button key={emoji} className="reaction-emoji-btn" onClick={() => handleReaction(emoji)}>
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
 
               <div className="readonly-bracket-scroll" ref={bracketRef}>
@@ -191,6 +213,43 @@ export default function ViewBracketPage() {
                   matchupStatuses={matchupStatuses}
                   mvpCorrect={mvpCorrect}
                 />
+              </div>
+
+              {/* Comments */}
+              <div className="bracket-comments">
+                <h3 className="comments-title">Comments ({comments.length})</h3>
+                <div className="comments-list">
+                  {comments.map((c) => (
+                    <div key={c.id} className="comment-item">
+                      <div className="comment-header">
+                        <span className="comment-author">{c.userName}</span>
+                        <span className="comment-time">
+                          {new Date(c.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                          {" "}
+                          {new Date(c.createdAt).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+                        </span>
+                      </div>
+                      <p className="comment-text">{c.text}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="comment-form">
+                  <input
+                    type="text"
+                    className="comment-input"
+                    placeholder="Leave a comment..."
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleComment(); }}
+                  />
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={handleComment}
+                    disabled={postingComment || !commentText.trim()}
+                  >
+                    {postingComment ? "..." : "Post"}
+                  </button>
+                </div>
               </div>
             </>
           )}

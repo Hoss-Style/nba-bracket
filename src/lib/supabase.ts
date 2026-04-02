@@ -1,4 +1,4 @@
-import { Entry, BracketPicks, Reaction } from "./types";
+import { Entry, BracketPicks, Reaction, Comment } from "./types";
 
 // Supabase configuration - set these in .env.local
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -218,6 +218,52 @@ export async function addReaction(reaction: Omit<Reaction, "id">): Promise<boole
       emoji: reaction.emoji,
       user_name: reaction.userName,
       created_at: reaction.createdAt,
+    }),
+  });
+  return res.ok;
+}
+
+// ============ COMMENTS ============
+
+export async function getComments(entryId: string): Promise<Comment[]> {
+  if (!isConfigured()) {
+    const stored = localStorage.getItem("bracket_comments");
+    const all: Comment[] = stored ? JSON.parse(stored) : [];
+    return all.filter((c) => c.entryId === entryId);
+  }
+
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/comments?entry_id=eq.${encodeURIComponent(entryId)}&order=created_at.asc`,
+    { headers }
+  );
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.map((row: Record<string, unknown>) => ({
+    id: row.id,
+    entryId: row.entry_id,
+    userName: row.user_name,
+    text: row.text,
+    createdAt: row.created_at,
+  }));
+}
+
+export async function addComment(comment: Omit<Comment, "id">): Promise<boolean> {
+  if (!isConfigured()) {
+    const stored = localStorage.getItem("bracket_comments");
+    const all: Comment[] = stored ? JSON.parse(stored) : [];
+    all.push({ ...comment, id: crypto.randomUUID() });
+    localStorage.setItem("bracket_comments", JSON.stringify(all));
+    return true;
+  }
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/comments`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      entry_id: comment.entryId,
+      user_name: comment.userName,
+      text: comment.text,
+      created_at: comment.createdAt,
     }),
   });
   return res.ok;
