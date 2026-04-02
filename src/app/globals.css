@@ -1062,6 +1062,20 @@ body {
   white-space: nowrap;
 }
 
+/* Blurred picks before deadline */
+.picks-blurred {
+  filter: blur(5px);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Locked view button */
+.scoreboard-locked-btn {
+  opacity: 0.4;
+  cursor: not-allowed;
+  font-size: 0.7rem !important;
+}
+
 .rank-badge {
   display: inline-flex;
   align-items: center;
@@ -1297,6 +1311,22 @@ body {
   /* Scoreboard: hide detail columns on mobile */
   .scoreboard-hide-mobile {
     display: none;
+  }
+
+  .scoreboard-champion-mobile {
+    font-size: 0.7rem;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .scoreboard-mvp-mobile {
+    font-size: 0.65rem;
+    max-width: 70px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   /* Landing */
@@ -2019,3 +2049,50 @@ body {
   border-color: var(--accent-red) !important;
   color: #fff !important;
 }
+
+/* Read-only bracket scroll container */
+.readonly-bracket-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 1024px) {
+  /* Override the stacking behavior inside the readonly scroll container */
+  .readonly-bracket-scroll .bracket-container {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0;
+    min-width: 1100px;
+    transform: scale(0.45);
+    transform-origin: top left;
+    width: 222%; /* 1/0.45 to compensate for scale */
+    margin-bottom: -55%; /* compensate for visual gap from scale */
+  }
+
+  .readonly-bracket-scroll .bracket-conference {
+    width: auto;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .readonly-bracket-scroll .bracket-rounds,
+  .readonly-bracket-scroll .bracket-rounds-reverse {
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+
+  .readonly-bracket-scroll .bracket-rounds-reverse {
+    flex-direction: row-reverse;
+  }
+
+  .readonly-bracket-scroll .conference-title-east {
+    text-align: right;
+  }
+
+  .readonly-bracket-scroll .bracket-finals {
+    order: 0;
+  }
+}
+

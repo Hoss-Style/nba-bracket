@@ -6,6 +6,7 @@ import { ScoreBreakdown, BracketPicks } from "@/lib/types";
 import { getAllEntries, getActualResults } from "@/lib/supabase";
 import { calculateScore } from "@/lib/scoring";
 import { getTeamByAbbr } from "@/lib/teams";
+import { isBeforeDeadline } from "@/lib/deadline";
 
 interface RankedEntry {
   id: string;
@@ -21,6 +22,17 @@ export default function ScoreboardPage() {
   const [rankings, setRankings] = useState<RankedEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasResults, setHasResults] = useState(false);
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
+  const beforeDeadline = isBeforeDeadline();
+
+  useEffect(() => {
+    const stored = localStorage.getItem("bracket_user");
+    if (stored) {
+      try {
+        setCurrentUserEmail(JSON.parse(stored).email);
+      } catch { /* ignore */ }
+    }
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -103,8 +115,8 @@ export default function ScoreboardPage() {
                   <tr>
                     <th style={{ width: "50px" }}>Rank</th>
                     <th>Name</th>
-                    <th className="scoreboard-hide-mobile">Champion</th>
-                    <th className="scoreboard-hide-mobile">MVP</th>
+                    <th>Champion</th>
+                    <th>MVP</th>
                     {hasResults && (
                       <>
                         <th className="scoreboard-hide-mobile">W</th>
@@ -126,8 +138,20 @@ export default function ScoreboardPage() {
                         </span>
                       </td>
                       <td style={{ fontWeight: 600 }}>{entry.name}</td>
-                      <td className="scoreboard-hide-mobile">{entry.champion}</td>
-                      <td className="scoreboard-hide-mobile text-muted">{entry.finalsMVP}</td>
+                      {(() => {
+                        const isCurrentUser = entry.email === currentUserEmail;
+                        const hidden = beforeDeadline && !isCurrentUser;
+                        return (
+                          <>
+                            <td className="scoreboard-champion-mobile">
+                              <span className={hidden ? "picks-blurred" : ""}>{entry.champion}</span>
+                            </td>
+                            <td className="scoreboard-mvp-mobile text-muted">
+                              <span className={hidden ? "picks-blurred" : ""}>{entry.finalsMVP}</span>
+                            </td>
+                          </>
+                        );
+                      })()}
                       {hasResults && (
                         <>
                           <td className="scoreboard-hide-mobile score-detail">{entry.score.correctWinners}</td>
@@ -143,9 +167,15 @@ export default function ScoreboardPage() {
                       </td>
                       <td>
                         {entry.id && (
-                          <a href={`/bracket/${entry.id}`} className="btn btn-secondary btn-sm scoreboard-view-btn">
-                            View
-                          </a>
+                          (!beforeDeadline || entry.email === currentUserEmail) ? (
+                            <a href={`/bracket/${entry.id}`} className="btn btn-secondary btn-sm scoreboard-view-btn">
+                              View
+                            </a>
+                          ) : (
+                            <span className="btn btn-secondary btn-sm scoreboard-view-btn scoreboard-locked-btn" title="Locked until tipoff">
+                              &#128274;
+                            </span>
+                          )
                         )}
                       </td>
                     </tr>

@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Nav from "@/components/Nav";
 import Bracket from "@/components/Bracket";
-import MobileBracket from "@/components/MobileBracket";
 import { Entry, MatchupResultStatus } from "@/lib/types";
 import { getEntryById, getActualResults } from "@/lib/supabase";
 import { getMatchupStatuses } from "@/lib/scoring";
@@ -72,19 +71,8 @@ export default function ViewBracketPage() {
                 <a href="/scoreboard" className="bracket-view-back">&larr; Scoreboard</a>
                 <span className="bracket-view-name">{entry.name}&apos;s Bracket</span>
               </div>
-              <div className="desktop-bracket">
+              <div className="readonly-bracket-scroll">
                 <Bracket
-                  picks={entry.picks}
-                  onPicksChange={noop}
-                  disabled={true}
-                  finalsMVP={entry.picks.finalsMVP || ""}
-                  onFinalsMVPChange={noop}
-                  matchupStatuses={matchupStatuses}
-                  mvpCorrect={mvpCorrect}
-                />
-              </div>
-              <div className="mobile-bracket-wrapper">
-                <MobileBracket
                   picks={entry.picks}
                   onPicksChange={noop}
                   disabled={true}
