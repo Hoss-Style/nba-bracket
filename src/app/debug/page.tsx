@@ -20,12 +20,8 @@ interface StatusInfo {
 }
 
 export default function DebugPage() {
-  const [password, setPassword] = useState("");
-  const [authenticated, setAuthenticated] = useState(false);
   const [status, setStatus] = useState<StatusInfo | null>(null);
   const [loading, setLoading] = useState("");
-
-  const ADMIN_PASS = process.env.NEXT_PUBLIC_ADMIN_PASS || "lew2026";
 
   async function applyScenario(
     label: string,
@@ -70,35 +66,6 @@ export default function DebugPage() {
     setLoading("");
   }
 
-  if (!authenticated) {
-    return (
-      <>
-        <Nav />
-        <div style={{ paddingTop: "6rem" }}>
-          <div className="submit-section" style={{ maxWidth: "400px" }}>
-            <h3>Debug Mode</h3>
-            <p>Enter the admin password to access debug tools.</p>
-            <div className="form-group">
-              <input
-                type="password"
-                className="form-input"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && password === ADMIN_PASS && setAuthenticated(true)}
-              />
-            </div>
-            <button
-              onClick={() => password === ADMIN_PASS && setAuthenticated(true)}
-              className="btn btn-primary submit-btn"
-            >
-              Enter
-            </button>
-          </div>
-        </div>
-      </>
-    );
-  }
 
   const scenarioButtons = [
     { label: "Higher Seeds Win (Sweeps)", fn: generateHigherSeedsWin },

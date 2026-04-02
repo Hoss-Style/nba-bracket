@@ -30,6 +30,8 @@ export default function Nav() {
     { href: "/", label: "Home" },
     { href: "/bracket", label: "Make Picks" },
     { href: "/scoreboard", label: "Scoreboard" },
+    { href: "/admin", label: "Admin" },
+    { href: "/debug", label: "Debug" },
   ];
 
   return (

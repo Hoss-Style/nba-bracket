@@ -8,20 +8,13 @@ import { createEmptyPicks } from "@/lib/emptyPicks";
 import { getActualResults, saveActualResults, getAllEntries } from "@/lib/supabase";
 
 export default function AdminPage() {
-  const [password, setPassword] = useState("");
-  const [authenticated, setAuthenticated] = useState(false);
   const [picks, setPicks] = useState<BracketPicks>(createEmptyPicks());
   const [finalsMVP, setFinalsMVP] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [entryCount, setEntryCount] = useState(0);
 
-  // Simple password gate — set NEXT_PUBLIC_ADMIN_PASS in .env.local
-  const ADMIN_PASS = process.env.NEXT_PUBLIC_ADMIN_PASS || "lew2026";
-
   useEffect(() => {
-    if (!authenticated) return;
-
     async function load() {
       const [results, entries] = await Promise.all([getActualResults(), getAllEntries()]);
       if (results) {
@@ -31,7 +24,7 @@ export default function AdminPage() {
       setEntryCount(entries.length);
     }
     load();
-  }, [authenticated]);
+  }, []);
 
   const handleSave = async () => {
     setSaving(true);
@@ -43,35 +36,6 @@ export default function AdminPage() {
     }
   };
 
-  if (!authenticated) {
-    return (
-      <>
-        <Nav />
-        <div style={{ paddingTop: "6rem" }}>
-          <div className="submit-section" style={{ maxWidth: "400px" }}>
-            <h3>Admin Access</h3>
-            <p>Enter the admin password to manage results.</p>
-            <div className="form-group">
-              <input
-                type="password"
-                className="form-input"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && password === ADMIN_PASS && setAuthenticated(true)}
-              />
-            </div>
-            <button
-              onClick={() => password === ADMIN_PASS && setAuthenticated(true)}
-              className="btn btn-primary submit-btn"
-            >
-              Enter
-            </button>
-          </div>
-        </div>
-      </>
-    );
-  }
 
   return (
     <>
