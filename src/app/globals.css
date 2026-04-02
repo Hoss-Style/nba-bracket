@@ -2082,7 +2082,9 @@ body {
 
 @media (max-width: 1024px) {
   .readonly-bracket-scroll {
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
     padding-bottom: 1rem;
   }
 
@@ -2091,9 +2093,8 @@ body {
     flex-direction: row;
     align-items: stretch;
     gap: 0;
-    width: 1200px;
-    transform: scale(var(--bracket-scale, 0.34));
-    transform-origin: top left;
+    width: 900px;
+    min-height: 520px;
   }
 
   .readonly-bracket-scroll .bracket-conference {
@@ -2123,7 +2124,77 @@ body {
   }
 
   .readonly-bracket-scroll .bracket-round {
-    min-width: 140px;
+    min-width: 110px;
+  }
+
+  .readonly-bracket-scroll .bracket-finals {
+    min-width: 180px;
+  }
+
+  /* Compact text for mobile readonly */
+  .readonly-bracket-scroll .matchup-name {
+    font-size: 0.7rem;
+  }
+
+  .readonly-bracket-scroll .matchup-seed {
+    width: 18px;
+    height: 18px;
+    font-size: 0.6rem;
+  }
+
+  .readonly-bracket-scroll .matchup-team {
+    padding: 0.3rem 0.4rem;
+    gap: 0.3rem;
+  }
+
+  .readonly-bracket-scroll .games-selector {
+    gap: 0.15rem;
+    padding: 0.2rem 0.3rem;
+  }
+
+  .readonly-bracket-scroll .games-btn {
+    width: 22px;
+    height: 22px;
+    font-size: 0.6rem;
+  }
+
+  .readonly-bracket-scroll .games-label {
+    font-size: 0.55rem;
+  }
+
+  .readonly-bracket-scroll .round-label {
+    font-size: 0.55rem;
+  }
+
+  .readonly-bracket-scroll .conference-title,
+  .readonly-bracket-scroll .conference-title-east {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.5rem;
+  }
+
+  .readonly-bracket-scroll .finals-trophy {
+    font-size: 1.8rem;
+  }
+
+  .readonly-bracket-scroll .finals-title {
+    font-size: 0.7rem;
+  }
+
+  .readonly-bracket-scroll .champion-display {
+    padding: 0.4rem 0.75rem;
+  }
+
+  .readonly-bracket-scroll .champion-name {
+    font-size: 0.85rem;
+  }
+
+  .readonly-bracket-scroll .mvp-label {
+    font-size: 0.65rem;
+  }
+
+  .readonly-bracket-scroll .mvp-selected {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
   }
 }
 

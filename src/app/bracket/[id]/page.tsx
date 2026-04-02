@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Nav from "@/components/Nav";
 import Bracket from "@/components/Bracket";
@@ -47,38 +47,6 @@ export default function ViewBracketPage() {
   }, [id]);
 
   const noop = () => {};
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [wrapperHeight, setWrapperHeight] = useState<number | undefined>(undefined);
-
-  const updateScale = useCallback(() => {
-    const wrapper = scrollRef.current;
-    if (!wrapper) return;
-    const bracketEl = wrapper.querySelector(".bracket-container") as HTMLElement;
-    if (!bracketEl) return;
-    const wrapperWidth = wrapper.clientWidth;
-    if (wrapperWidth >= 1024) {
-      setWrapperHeight(undefined);
-      return;
-    }
-    // Temporarily remove scale to measure natural height
-    bracketEl.style.setProperty("--bracket-scale", "1");
-    const naturalHeight = bracketEl.scrollHeight;
-    const bracketNativeWidth = 1200;
-    const scale = Math.min(wrapperWidth / bracketNativeWidth, 1);
-    bracketEl.style.setProperty("--bracket-scale", String(scale));
-    setWrapperHeight(naturalHeight * scale);
-  }, []);
-
-  useEffect(() => {
-    if (!entry) return;
-    // Wait for bracket to render
-    const raf = requestAnimationFrame(() => updateScale());
-    window.addEventListener("resize", updateScale);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", updateScale);
-    };
-  }, [entry, updateScale]);
 
   return (
     <>
@@ -103,7 +71,7 @@ export default function ViewBracketPage() {
                 <a href="/scoreboard" className="bracket-view-back">&larr; Scoreboard</a>
                 <span className="bracket-view-name">{entry.name}&apos;s Bracket</span>
               </div>
-              <div className="readonly-bracket-scroll" ref={scrollRef} style={wrapperHeight ? { height: wrapperHeight } : undefined}>
+              <div className="readonly-bracket-scroll">
                 <Bracket
                   picks={entry.picks}
                   onPicksChange={noop}
