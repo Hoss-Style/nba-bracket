@@ -121,14 +121,6 @@ export default function ScoreboardPage() {
                     <th>Name</th>
                     <th>Champion</th>
                     <th>MVP</th>
-                    {hasResults && (
-                      <>
-                        <th className="scoreboard-hide-mobile">W</th>
-                        <th className="scoreboard-hide-mobile">G</th>
-                        <th className="scoreboard-hide-mobile">U</th>
-                        <th className="scoreboard-hide-mobile">MVP</th>
-                      </>
-                    )}
                     <th>{hasResults ? "Pts" : "Total"}</th>
                     {hasResults && <th className="scoreboard-hide-mobile">Max</th>}
                     <th style={{ width: "70px" }}></th>
@@ -157,14 +149,6 @@ export default function ScoreboardPage() {
                           </>
                         );
                       })()}
-                      {hasResults && (
-                        <>
-                          <td className="scoreboard-hide-mobile score-detail">{entry.score.correctWinners}</td>
-                          <td className="scoreboard-hide-mobile score-detail">{entry.score.correctGames}</td>
-                          <td className="scoreboard-hide-mobile score-detail">{entry.score.upsetBonuses}</td>
-                          <td className="scoreboard-hide-mobile score-detail">{entry.score.finalsMVP > 0 ? "10" : "0"}</td>
-                        </>
-                      )}
                       <td>
                         <span className={hasResults ? "score-total" : "text-muted"}>
                           {hasResults ? entry.score.total : "—"}
