@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import Nav from "@/components/Nav";
 import Bracket from "@/components/Bracket";
 import { Entry, Reaction, Comment, MatchupResultStatus } from "@/lib/types";
-import { getEntryById, getActualResults, getReactions, addReaction, getComments, addComment } from "@/lib/supabase";
+import { getEntryById, getActualResults, getCommentReactions, addReaction, getComments, addComment } from "@/lib/supabase";
 import { getMatchupStatuses } from "@/lib/scoring";
 
 export default function ViewBracketPage() {
@@ -17,8 +17,8 @@ export default function ViewBracketPage() {
   const [matchupStatuses, setMatchupStatuses] = useState<Record<string, MatchupResultStatus> | null>(null);
   const [mvpCorrect, setMvpCorrect] = useState<boolean | null>(null);
   const [copied, setCopied] = useState(false);
-  const [reactions, setReactions] = useState<Reaction[]>([]);
-  const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [commentReactions, setCommentReactions] = useState<Record<string, Reaction[]>>({});
+  const [activeReactionPicker, setActiveReactionPicker] = useState<string | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState("");
   const [postingComment, setPostingComment] = useState(false);
@@ -41,13 +41,18 @@ export default function ViewBracketPage() {
               );
             }
           }
-          // Load reactions and comments
-          const [r, c] = await Promise.all([
-            getReactions(result.id || id),
-            getComments(result.id || id),
-          ]);
-          setReactions(r);
+          // Load comments then reactions per comment
+          const c = await getComments(result.id || id);
           setComments(c);
+          const reactionsMap: Record<string, Reaction[]> = {};
+          await Promise.all(
+            c.map(async (comment) => {
+              if (comment.id) {
+                reactionsMap[comment.id] = await getCommentReactions(comment.id);
+              }
+            })
+          );
+          setCommentReactions(reactionsMap);
         } else {
           setError(true);
         }
@@ -112,18 +117,19 @@ export default function ViewBracketPage() {
 
   const EMOJI_OPTIONS = ["\uD83D\uDD25", "\uD83D\uDC80", "\uD83E\uDD21", "\uD83D\uDCAF", "\uD83D\uDE02", "\uD83D\uDE33", "\uD83C\uDFC6", "\uD83D\uDC4D"];
 
-  const handleReaction = async (emoji: string) => {
+  const handleReaction = async (commentId: string, emoji: string) => {
     const stored = localStorage.getItem("bracket_user");
     const userName = stored ? JSON.parse(stored).name : "Anonymous";
     await addReaction({
       entryId: entry?.id || id,
+      commentId,
       emoji,
       userName,
       createdAt: new Date().toISOString(),
     });
-    const updated = await getReactions(entry?.id || id);
-    setReactions(updated);
-    setShowReactionPicker(false);
+    const updated = await getCommentReactions(commentId);
+    setCommentReactions((prev) => ({ ...prev, [commentId]: updated }));
+    setActiveReactionPicker(null);
   };
 
   const handleComment = async () => {
@@ -172,34 +178,6 @@ export default function ViewBracketPage() {
                   <button onClick={handleExport} disabled={exporting} className="btn btn-secondary btn-sm">
                     {exporting ? "Saving..." : "Export"}
                   </button>
-                  <div className="reactions-inline">
-                    {(() => {
-                      const counts: Record<string, number> = {};
-                      reactions.forEach((r) => { counts[r.emoji] = (counts[r.emoji] || 0) + 1; });
-                      return Object.entries(counts).map(([emoji, count]) => (
-                        <span key={emoji} className="reaction-badge">
-                          {emoji} {count}
-                        </span>
-                      ));
-                    })()}
-                    <div className="reaction-add-wrapper">
-                      <button
-                        className="reaction-add-btn"
-                        onClick={() => setShowReactionPicker(!showReactionPicker)}
-                      >
-                        +
-                      </button>
-                      {showReactionPicker && (
-                        <div className="reaction-picker reaction-picker-dropdown">
-                          {EMOJI_OPTIONS.map((emoji) => (
-                            <button key={emoji} className="reaction-emoji-btn" onClick={() => handleReaction(emoji)}>
-                              {emoji}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
                 </div>
               </div>
 
@@ -230,6 +208,35 @@ export default function ViewBracketPage() {
                         </span>
                       </div>
                       <p className="comment-text">{c.text}</p>
+                      <div className="comment-reactions">
+                        {(() => {
+                          const rs = commentReactions[c.id || ""] || [];
+                          const counts: Record<string, number> = {};
+                          rs.forEach((r) => { counts[r.emoji] = (counts[r.emoji] || 0) + 1; });
+                          return Object.entries(counts).map(([emoji, count]) => (
+                            <span key={emoji} className="reaction-badge reaction-badge-sm">
+                              {emoji} {count}
+                            </span>
+                          ));
+                        })()}
+                        <div className="reaction-add-wrapper">
+                          <button
+                            className="reaction-add-btn reaction-add-btn-sm"
+                            onClick={() => setActiveReactionPicker(activeReactionPicker === c.id ? null : (c.id || null))}
+                          >
+                            +
+                          </button>
+                          {activeReactionPicker === c.id && (
+                            <div className="reaction-picker reaction-picker-dropdown">
+                              {EMOJI_OPTIONS.map((emoji) => (
+                                <button key={emoji} className="reaction-emoji-btn" onClick={() => handleReaction(c.id || "", emoji)}>
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>

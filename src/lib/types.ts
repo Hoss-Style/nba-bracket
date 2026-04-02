@@ -87,6 +87,7 @@ export const FINALS_MVP_POINTS = 15;
 export interface Reaction {
   id?: string;
   entryId: string;
+  commentId?: string;
   emoji: string;
   userName: string;
   createdAt: string;

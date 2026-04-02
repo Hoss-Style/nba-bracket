@@ -195,6 +195,30 @@ export async function getReactions(entryId: string): Promise<Reaction[]> {
   return data.map((row: Record<string, unknown>) => ({
     id: row.id,
     entryId: row.entry_id,
+    commentId: row.comment_id,
+    emoji: row.emoji,
+    userName: row.user_name,
+    createdAt: row.created_at,
+  }));
+}
+
+export async function getCommentReactions(commentId: string): Promise<Reaction[]> {
+  if (!isConfigured()) {
+    const stored = localStorage.getItem("bracket_reactions");
+    const all: Reaction[] = stored ? JSON.parse(stored) : [];
+    return all.filter((r) => r.commentId === commentId);
+  }
+
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/reactions?comment_id=eq.${encodeURIComponent(commentId)}&order=created_at.desc`,
+    { headers }
+  );
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.map((row: Record<string, unknown>) => ({
+    id: row.id,
+    entryId: row.entry_id,
+    commentId: row.comment_id,
     emoji: row.emoji,
     userName: row.user_name,
     createdAt: row.created_at,
@@ -215,6 +239,7 @@ export async function addReaction(reaction: Omit<Reaction, "id">): Promise<boole
     headers,
     body: JSON.stringify({
       entry_id: reaction.entryId,
+      comment_id: reaction.commentId,
       emoji: reaction.emoji,
       user_name: reaction.userName,
       created_at: reaction.createdAt,

@@ -2357,6 +2357,25 @@ body {
   line-height: 1.4;
 }
 
+.comment-reactions {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.reaction-badge-sm {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.45rem;
+}
+
+.reaction-add-btn-sm {
+  width: 22px;
+  height: 22px;
+  font-size: 0.8rem;
+}
+
 .comment-form {
   display: flex;
   gap: 0.5rem;
