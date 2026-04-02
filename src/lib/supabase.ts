@@ -130,6 +130,7 @@ export async function updateEntry(entry: Entry): Promise<boolean> {
     headers,
     body: JSON.stringify({
       picks: entry.picks,
+      pin: entry.pin,
       submitted_at: entry.submittedAt,
     }),
   });

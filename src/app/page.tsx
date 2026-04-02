@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { getEntryByEmail, submitEntry } from "@/lib/supabase";
+import { getEntryByEmail, submitEntry, updateEntry } from "@/lib/supabase";
 import { createEmptyPicks } from "@/lib/emptyPicks";
 import { isBeforeDeadline } from "@/lib/deadline";
 
-type Step = "email" | "pin" | "register";
+type Step = "email" | "pin" | "register" | "forgot";
 
 export default function Home() {
   const router = useRouter();
@@ -30,6 +30,8 @@ export default function Home() {
   const [newPin, setNewPin] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetPin, setResetPin] = useState("");
+  const [nameVerified, setNameVerified] = useState(false);
 
   const formatPhone = (value: string): string => {
     const digits = value.replace(/\D/g, "").slice(0, 10);
@@ -120,6 +122,53 @@ export default function Home() {
     }
   };
 
+  const handleVerifyName = async () => {
+    if (!name.trim()) { setError("Enter the name you registered with."); return; }
+    setLoading(true);
+    setError("");
+    try {
+      const entry = await getEntryByEmail(email.trim());
+      if (!entry) { setError("Account not found."); setLoading(false); return; }
+      if (entry.name.toLowerCase().trim() !== name.toLowerCase().trim()) {
+        setError("Name doesn't match our records.");
+        setLoading(false);
+        return;
+      }
+      setNameVerified(true);
+    } catch {
+      setError("Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPin = async () => {
+    if (resetPin.length !== 4) { setError("PIN must be exactly 4 digits."); return; }
+    setLoading(true);
+    setError("");
+    try {
+      const entry = await getEntryByEmail(email.trim());
+      if (!entry) { setError("Account not found."); setLoading(false); return; }
+      const success = await updateEntry({ ...entry, pin: resetPin.trim() });
+      if (success) {
+        localStorage.setItem("bracket_user", JSON.stringify({
+          id: entry.id,
+          name: entry.name,
+          email: entry.email,
+          phone: entry.phone,
+        }));
+        const hasPicks = entry.picks.westR1_1 !== null;
+        router.push(hasPicks ? "/scoreboard" : "/bracket");
+      } else {
+        setError("Failed to reset PIN. Try again.");
+      }
+    } catch {
+      setError("Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (checking) return null;
 
   return (
@@ -195,6 +244,76 @@ export default function Home() {
                 className="landing-back-link"
               >
                 &larr; Use a different email
+              </button>
+              <button
+                onClick={() => { setStep("forgot"); setName(""); setResetPin(""); setNameVerified(false); setError(""); }}
+                className="landing-back-link"
+              >
+                Forgot PIN?
+              </button>
+            </>
+          )}
+
+          {step === "forgot" && (
+            <>
+              <p className="landing-form-label">Reset your PIN</p>
+              <p className="landing-form-sub">{email}</p>
+              {!nameVerified ? (
+                <>
+                  <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.75rem" }}>
+                    Enter the name you registered with to verify your identity.
+                  </p>
+                  <div className="form-group">
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Your name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleVerifyName()}
+                    />
+                  </div>
+                  {error && <div className="form-error">{error}</div>}
+                  <button
+                    onClick={handleVerifyName}
+                    disabled={loading}
+                    className="btn btn-accent landing-btn"
+                  >
+                    {loading ? "Verifying..." : "Verify"}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p style={{ fontSize: "0.85rem", color: "var(--accent-green)", marginBottom: "0.75rem" }}>
+                    Identity verified. Set your new PIN.
+                  </p>
+                  <div className="form-group">
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      className="form-input"
+                      placeholder="New 4-digit PIN"
+                      value={resetPin}
+                      maxLength={4}
+                      onChange={(e) => setResetPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                      onKeyDown={(e) => e.key === "Enter" && handleResetPin()}
+                    />
+                  </div>
+                  {error && <div className="form-error">{error}</div>}
+                  <button
+                    onClick={handleResetPin}
+                    disabled={loading}
+                    className="btn btn-accent landing-btn"
+                  >
+                    {loading ? "Resetting..." : "Reset PIN & Log In"}
+                  </button>
+                </>
+              )}
+              <button
+                onClick={() => { setStep("pin"); setError(""); setNameVerified(false); }}
+                className="landing-back-link"
+              >
+                &larr; Back to PIN login
               </button>
             </>
           )}
