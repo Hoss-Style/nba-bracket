@@ -2235,9 +2235,10 @@ body {
 .reaction-picker-dropdown {
   position: absolute;
   top: 100%;
-  right: 0;
+  left: 0;
   margin-top: 0.5rem;
   z-index: 100;
+  white-space: nowrap;
 }
 
 .reaction-badge {
@@ -2280,9 +2281,6 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
-  width: fit-content;
-  flex-wrap: wrap;
-  max-width: 280px;
 }
 
 .reaction-emoji-btn {
@@ -2397,7 +2395,7 @@ body {
   border: 1px solid var(--border);
   background: var(--bg-card);
   color: var(--text-primary);
-  font-size: 0.85rem;
+  font-size: 16px;
   outline: none;
   transition: border-color 0.2s ease;
 }
