@@ -30,7 +30,7 @@ export default function Nav() {
 
   const links = [
     { href: "/", label: "Home" },
-    { href: "/bracket", label: "Make Picks" },
+    { href: "/bracket", label: "My Bracket" },
     { href: "/scoreboard", label: "Scoreboard" },
     { href: "/admin", label: "Admin" },
     { href: "/debug", label: "Debug" },
