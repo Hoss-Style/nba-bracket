@@ -65,6 +65,13 @@ export default function ViewBracketPage() {
     if (id) load();
   }, [id]);
 
+  useEffect(() => {
+    if (!activeReactionPicker) return;
+    const handleClick = () => setActiveReactionPicker(null);
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [activeReactionPicker]);
+
   const noop = () => {};
 
   const handleShare = async () => {
@@ -226,7 +233,7 @@ export default function ViewBracketPage() {
                         <div className="reaction-add-wrapper">
                           <button
                             className="reaction-add-btn reaction-add-btn-sm"
-                            onClick={() => setActiveReactionPicker(activeReactionPicker === c.id ? null : (c.id || null))}
+                            onClick={(e) => { e.stopPropagation(); setActiveReactionPicker(activeReactionPicker === c.id ? null : (c.id || null)); }}
                           >
                             +
                           </button>
