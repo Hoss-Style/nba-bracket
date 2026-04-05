@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <!-- Ball gradient - warm orange with depth -->
+    <radialGradient id="ball" cx="38%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#ff8844"/>
+      <stop offset="45%" stop-color="#e56020"/>
+      <stop offset="100%" stop-color="#a33a08"/>
+    </radialGradient>
+    <!-- Specular highlight -->
+    <radialGradient id="shine" cx="35%" cy="30%" r="30%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.4)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
+    <!-- Bottom shadow -->
+    <radialGradient id="shadow" cx="50%" cy="95%" r="50%">
+      <stop offset="0%" stop-color="rgba(0,0,0,0.3)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Ball base -->
+  <circle cx="16" cy="16" r="14.5" fill="url(#ball)"/>
+
+  <!-- Seam lines -->
+  <g fill="none" stroke="#2a1508" stroke-width="1.1" stroke-linecap="round" opacity="0.7">
+    <!-- Vertical seam -->
+    <path d="M16 1.5 C13 8, 13 24, 16 30.5"/>
+    <path d="M16 1.5 C19 8, 19 24, 16 30.5"/>
+    <!-- Horizontal seam -->
+    <path d="M1.5 16 C8 13, 24 13, 30.5 16"/>
+    <path d="M1.5 16 C8 19, 24 19, 30.5 16"/>
+    <!-- Left arc -->
+    <path d="M4.5 5 C9 10, 9 22, 4.5 27"/>
+    <!-- Right arc -->
+    <path d="M27.5 5 C23 10, 23 22, 27.5 27"/>
+  </g>
+
+  <!-- Inner shadow for depth -->
+  <circle cx="16" cy="16" r="14.5" fill="url(#shadow)"/>
+
+  <!-- Specular highlight -->
+  <circle cx="16" cy="16" r="14.5" fill="url(#shine)"/>
+
+  <!-- Crisp edge ring -->
+  <circle cx="16" cy="16" r="14.5" fill="none" stroke="#7a2e08" stroke-width="0.75" opacity="0.5"/>
+</svg>
