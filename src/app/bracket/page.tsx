@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Nav from "@/components/Nav";
 import Bracket from "@/components/Bracket";
 import MobileBracket from "@/components/MobileBracket";
-import { BracketPicks } from "@/lib/types";
+import { BracketPicks, Entry } from "@/lib/types";
 import { createEmptyPicks, isPicksComplete, countCompletedPicks } from "@/lib/emptyPicks";
 import { getEntryByEmail, updateEntry } from "@/lib/supabase";
 import { isBeforeDeadline } from "@/lib/deadline";
+import { getMatchupStatuses } from "@/lib/scoring";
+import { getActualResults } from "@/lib/supabase";
 import confetti from "canvas-confetti";
 
 interface BracketUser {
@@ -23,11 +25,17 @@ export default function BracketPage() {
   const [picks, setPicks] = useState<BracketPicks>(createEmptyPicks());
   const [finalsMVP, setFinalsMVP] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [user, setUser] = useState<BracketUser | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [onMvpStep, setOnMvpStep] = useState(false);
+  const [existingEntry, setExistingEntry] = useState<Entry | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [matchupStatuses, setMatchupStatuses] = useState<Record<string, import("@/lib/types").MatchupResultStatus> | null>(null);
+  const [mvpCorrect, setMvpCorrect] = useState<boolean | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const bracketRef = useRef<HTMLDivElement>(null);
 
   // Deadline
   const [locked, setLocked] = useState(!isBeforeDeadline());
@@ -55,6 +63,18 @@ export default function BracketPage() {
         if (entry && entry.picks.westR1_1 !== null) {
           setPicks(entry.picks);
           setFinalsMVP(entry.picks.finalsMVP || "");
+          setExistingEntry(entry);
+
+          // Load actual results for status display
+          const actualResults = await getActualResults();
+          if (actualResults) {
+            setMatchupStatuses(getMatchupStatuses(entry.picks, actualResults.picks));
+            if (actualResults.finalsMVP && entry.picks.finalsMVP) {
+              setMvpCorrect(
+                entry.picks.finalsMVP.toLowerCase().trim() === actualResults.finalsMVP.toLowerCase().trim()
+              );
+            }
+          }
         }
       } catch {
         // Fresh bracket
@@ -69,6 +89,9 @@ export default function BracketPage() {
   const completedCount = countCompletedPicks(picksWithMVP);
   const totalPicks = 16;
   const allComplete = isPicksComplete(picksWithMVP);
+
+  // Whether user has a previously submitted bracket
+  const hasSubmitted = existingEntry && existingEntry.picks.westR1_1 !== null;
 
   const handleSubmit = async () => {
     if (!user) return;
@@ -93,7 +116,8 @@ export default function BracketPage() {
           submittedAt: new Date().toISOString(),
         });
         if (success) {
-          setSubmitted(true);
+          setExistingEntry({ ...existing, picks: picksWithMVP });
+          setEditing(false);
           confetti({
             particleCount: 150,
             spread: 80,
@@ -123,6 +147,49 @@ export default function BracketPage() {
     }
   };
 
+  const handleShare = async () => {
+    const entryId = existingEntry?.id || "";
+    const url = `${window.location.origin}/bracket/${entryId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleExport = async () => {
+    const el = bracketRef.current;
+    if (!el) return;
+    setExporting(true);
+
+    try {
+      const { toPng } = await import("html-to-image");
+      el.classList.add("export-mode");
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+      const dataUrl = await toPng(el, {
+        pixelRatio: 2,
+        backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--bg-dark").trim() || "#0a0a0f",
+      });
+
+      el.classList.remove("export-mode");
+
+      const link = document.createElement("a");
+      link.download = `${user?.name || "bracket"}-picks.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch {
+      bracketRef.current?.classList.remove("export-mode");
+    }
+
+    setExporting(false);
+  };
+
+  const noop = () => {};
+
   if (loadingUser || !user) {
     return (
       <>
@@ -136,28 +203,40 @@ export default function BracketPage() {
     );
   }
 
-  if (submitted) {
+  // Show read-only view if user already submitted and isn't editing
+  if (hasSubmitted && !editing) {
     return (
       <>
         <Nav />
         <div className="nav-spacer">
-          <div className="success-card">
-            <div className="success-icon">&#10003;</div>
-            <h2>Picks Saved!</h2>
-            <p>
-              Nice work, <strong>{user.name}</strong>. Your bracket has been saved.
-              You can edit anytime before the deadline.
-            </p>
-            <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap", marginTop: "1rem" }}>
-              <a href="/scoreboard" className="btn btn-primary">
-                View Scoreboard &rarr;
-              </a>
-              <button
-                className="btn btn-secondary"
-                onClick={() => setSubmitted(false)}
-              >
-                Edit My Picks
-              </button>
+          <div className="page-container bracket-page-container">
+            <div className="bracket-view-header">
+              <span className="bracket-view-name">{user.name}&apos;s Bracket</span>
+              <div className="bracket-view-actions">
+                <button onClick={handleShare} className="btn btn-secondary btn-sm">
+                  {copied ? "Copied!" : "Share"}
+                </button>
+                <button onClick={handleExport} disabled={exporting} className="btn btn-secondary btn-sm">
+                  {exporting ? "Saving..." : "Export"}
+                </button>
+                {!locked && (
+                  <button onClick={() => setEditing(true)} className="btn btn-primary btn-sm">
+                    Edit Picks
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="readonly-bracket-scroll" ref={bracketRef}>
+              <Bracket
+                picks={existingEntry!.picks}
+                onPicksChange={noop}
+                disabled={true}
+                finalsMVP={existingEntry!.picks.finalsMVP || ""}
+                onFinalsMVPChange={noop}
+                matchupStatuses={matchupStatuses}
+                mvpCorrect={mvpCorrect}
+              />
             </div>
           </div>
         </div>
@@ -165,7 +244,7 @@ export default function BracketPage() {
     );
   }
 
-  if (locked) {
+  if (locked && !hasSubmitted) {
     return (
       <>
         <Nav />
