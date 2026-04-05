@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Nav from "@/components/Nav";
 import Dashboard from "@/components/Dashboard";
+import GroupChat from "@/components/GroupChat";
 import { BracketUser } from "@/lib/types";
 import { getEntryByEmail, submitEntry, updateEntry } from "@/lib/supabase";
 import { createEmptyPicks } from "@/lib/emptyPicks";
@@ -161,7 +162,14 @@ export default function Home() {
       <>
         <Nav />
         <div className="nav-spacer">
-          <Dashboard user={loggedInUser} />
+          <div className="home-layout">
+            <div className="home-main">
+              <Dashboard user={loggedInUser} />
+            </div>
+            <div className="home-sidebar">
+              <GroupChat userName={loggedInUser.name} />
+            </div>
+          </div>
         </div>
       </>
     );
