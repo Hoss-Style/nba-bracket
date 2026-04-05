@@ -6,6 +6,8 @@ import { useState, useEffect } from "react";
 import { isBeforeDeadline, getTimeUntilDeadline } from "@/lib/deadline";
 import { useTheme } from "@/lib/ThemeContext";
 
+const ADMIN_EMAIL = "hossa28@gmail.com";
+
 export default function Nav() {
   const pathname = usePathname();
   const isBracketPage = pathname === "/bracket";
@@ -14,6 +16,17 @@ export default function Nav() {
   const [countdown, setCountdown] = useState(getTimeUntilDeadline());
   const [showRules, setShowRules] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("bracket_user");
+      if (stored) {
+        const user = JSON.parse(stored);
+        setIsAdmin(user.email?.toLowerCase() === ADMIN_EMAIL);
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   useEffect(() => {
     if (!isBracketPage) return;
@@ -28,13 +41,14 @@ export default function Nav() {
     setMenuOpen(false);
   }, [pathname]);
 
-  const links = [
+  const allLinks = [
     { href: "/", label: "Home" },
     { href: "/bracket", label: "My Bracket" },
     { href: "/scoreboard", label: "Scoreboard" },
-    { href: "/admin", label: "Admin" },
-    { href: "/debug", label: "Debug" },
+    { href: "/admin", label: "Admin", adminOnly: true },
+    { href: "/debug", label: "Debug", adminOnly: true },
   ];
+  const links = allLinks.filter((l) => !l.adminOnly || isAdmin);
 
   return (
     <>

@@ -9,7 +9,7 @@ import { BracketPicks, BracketUser, Entry } from "@/lib/types";
 import { createEmptyPicks, isPicksComplete, countCompletedPicks } from "@/lib/emptyPicks";
 import { getEntryByEmail, updateEntry } from "@/lib/supabase";
 import { isBeforeDeadline } from "@/lib/deadline";
-import { getMatchupStatuses } from "@/lib/scoring";
+import { getMatchupStatuses, getEliminatedTeams } from "@/lib/scoring";
 import { getActualResults } from "@/lib/supabase";
 import confetti from "canvas-confetti";
 
@@ -26,6 +26,7 @@ export default function BracketPage() {
   const [editing, setEditing] = useState(false);
   const [matchupStatuses, setMatchupStatuses] = useState<Record<string, import("@/lib/types").MatchupResultStatus> | null>(null);
   const [mvpCorrect, setMvpCorrect] = useState<boolean | null>(null);
+  const [eliminatedTeams, setEliminatedTeams] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState(false);
   const [exporting, setExporting] = useState(false);
   const bracketRef = useRef<HTMLDivElement>(null);
@@ -62,6 +63,7 @@ export default function BracketPage() {
           const actualResults = await getActualResults();
           if (actualResults) {
             setMatchupStatuses(getMatchupStatuses(entry.picks, actualResults.picks));
+            setEliminatedTeams(getEliminatedTeams(actualResults.picks));
             if (actualResults.finalsMVP && entry.picks.finalsMVP) {
               setMvpCorrect(
                 entry.picks.finalsMVP.toLowerCase().trim() === actualResults.finalsMVP.toLowerCase().trim()
@@ -229,6 +231,7 @@ export default function BracketPage() {
                 onFinalsMVPChange={noop}
                 matchupStatuses={matchupStatuses}
                 mvpCorrect={mvpCorrect}
+                eliminatedTeams={eliminatedTeams}
               />
             </div>
           </div>

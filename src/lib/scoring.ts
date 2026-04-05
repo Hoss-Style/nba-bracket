@@ -1,5 +1,5 @@
 import { BracketPicks, MatchupPick, MatchupResultStatus, ScoreBreakdown, ROUND_POINTS, FINALS_MVP_POINTS, RoundName } from "./types";
-import { getTeamByAbbr, isUpset } from "./teams";
+import { getTeamByAbbr, isUpset, WEST_TEAMS, EAST_TEAMS } from "./teams";
 
 const MATCHUP_ROUNDS: Record<string, RoundName> = {
   westR1_1: "R1", westR1_2: "R1", westR1_3: "R1", westR1_4: "R1",
@@ -48,6 +48,56 @@ function getOpponentSeed(matchupId: string, winnerAbbr: string, actualResults: B
     return getTeamSeed(opponent);
   }
   return 0;
+}
+
+// Get all teams that have been eliminated (lost a series) based on actual results
+export function getEliminatedTeams(actualResults: BracketPicks): Set<string> {
+  const eliminated = new Set<string>();
+  const matchupIds = Object.keys(MATCHUP_ROUNDS);
+
+  for (const matchupId of matchupIds) {
+    const result = actualResults[matchupId as keyof BracketPicks] as MatchupPick | null;
+    if (!result) continue;
+
+    // The winner is known — figure out who lost
+    const round = MATCHUP_ROUNDS[matchupId];
+    if (round === "R1") {
+      // In R1, we know both teams from the bracket structure
+      const seeds = R1_SEEDS[matchupId];
+      if (seeds) {
+        const [s1, s2] = seeds;
+        const conf = matchupId.startsWith("west") ? "west" : "east";
+        const teams = conf === "west"
+          ? [WEST_TEAMS[0], WEST_TEAMS[1], WEST_TEAMS[2], WEST_TEAMS[3], WEST_TEAMS[4], WEST_TEAMS[5], WEST_TEAMS[6], WEST_TEAMS[7]]
+          : [EAST_TEAMS[0], EAST_TEAMS[1], EAST_TEAMS[2], EAST_TEAMS[3], EAST_TEAMS[4], EAST_TEAMS[5], EAST_TEAMS[6], EAST_TEAMS[7]];
+        const topTeam = teams.find(t => t.seed === s1);
+        const botTeam = teams.find(t => t.seed === s2);
+        if (topTeam && topTeam.abbreviation !== result.winner) eliminated.add(topTeam.abbreviation);
+        if (botTeam && botTeam.abbreviation !== result.winner) eliminated.add(botTeam.abbreviation);
+      }
+    } else {
+      // For later rounds, the loser is the other feeder's winner
+      const feederMap: Record<string, [string, string]> = {
+        westR2_1: ["westR1_1", "westR1_2"],
+        westR2_2: ["westR1_3", "westR1_4"],
+        eastR2_1: ["eastR1_1", "eastR1_2"],
+        eastR2_2: ["eastR1_3", "eastR1_4"],
+        westCF: ["westR2_1", "westR2_2"],
+        eastCF: ["eastR2_1", "eastR2_2"],
+        finals: ["westCF", "eastCF"],
+      };
+      const feeders = feederMap[matchupId];
+      if (feeders) {
+        const [f1, f2] = feeders;
+        const team1 = (actualResults[f1 as keyof BracketPicks] as MatchupPick | null)?.winner;
+        const team2 = (actualResults[f2 as keyof BracketPicks] as MatchupPick | null)?.winner;
+        if (team1 && team1 !== result.winner) eliminated.add(team1);
+        if (team2 && team2 !== result.winner) eliminated.add(team2);
+      }
+    }
+  }
+
+  return eliminated;
 }
 
 export function getMatchupStatuses(

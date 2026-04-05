@@ -10,11 +10,12 @@ interface MatchupCardProps {
   disabled?: boolean;
   compact?: boolean;
   resultStatus?: { winnerCorrect: boolean; gamesCorrect: boolean };
+  eliminatedTeams?: Set<string>;
 }
 
 const GAME_OPTIONS = [4, 5, 6, 7];
 
-export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disabled, compact, resultStatus }: MatchupCardProps) {
+export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disabled, compact, resultStatus, eliminatedTeams }: MatchupCardProps) {
   const handleTeamClick = (team: Team) => {
     if (disabled) return;
     if (pick?.winner === team.abbreviation) return; // already selected
@@ -29,6 +30,9 @@ export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disable
   const isTopSelected = pick?.winner === topTeam?.abbreviation;
   const isBottomSelected = pick?.winner === bottomTeam?.abbreviation;
   const selectedTeam = isTopSelected ? topTeam : isBottomSelected ? bottomTeam : null;
+
+  // Check if picked team was eliminated in a prior round
+  const isPickEliminated = selectedTeam && eliminatedTeams?.has(selectedTeam.abbreviation) && !resultStatus;
 
   // Pick the most visible color for highlights against dark backgrounds
   const getHighlightColor = (team: Team) => {
@@ -62,7 +66,9 @@ export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disable
 
   // Determine result-aware colors
   const getResultColor = (isSelected: boolean) => {
-    if (!resultStatus || !isSelected) return null;
+    if (!isSelected) return null;
+    if (isPickEliminated) return "var(--accent-red)";
+    if (!resultStatus) return null;
     return resultStatus.winnerCorrect ? "var(--accent-green)" : "var(--accent-red)";
   };
 
@@ -113,13 +119,14 @@ export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disable
         {topTeam ? (
           <>
             <span className="matchup-seed" style={getSeedStyle(isTopSelected, topTeam)}>{topTeam.seed}</span>
-            <span className={`matchup-name ${isTopSelected && resultStatus && !resultStatus.winnerCorrect ? "matchup-name-wrong" : ""}`}>{topTeam.name}</span>
-            {isTopSelected && (
-              resultStatus
-                ? <span className={`matchup-result-icon ${resultStatus.winnerCorrect ? "matchup-result-correct" : "matchup-result-incorrect"}`}>
-                    {resultStatus.winnerCorrect ? "\u2713" : "\u2717"}
-                  </span>
-                : <span className="matchup-check">&#10003;</span>
+            <span className={`matchup-name ${isTopSelected && ((resultStatus && !resultStatus.winnerCorrect) || isPickEliminated) ? "matchup-name-wrong" : ""}`}>{topTeam.name}</span>
+            {isTopSelected && resultStatus && (
+              <span className={`matchup-result-icon ${resultStatus.winnerCorrect ? "matchup-result-correct" : "matchup-result-incorrect"}`}>
+                {resultStatus.winnerCorrect ? "\u2713" : "\u2717"}
+              </span>
+            )}
+            {isTopSelected && isPickEliminated && (
+              <span className="matchup-result-icon matchup-result-incorrect">{"\u2717"}</span>
             )}
           </>
         ) : (
@@ -139,13 +146,14 @@ export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disable
         {bottomTeam ? (
           <>
             <span className="matchup-seed" style={getSeedStyle(isBottomSelected, bottomTeam)}>{bottomTeam.seed}</span>
-            <span className={`matchup-name ${isBottomSelected && resultStatus && !resultStatus.winnerCorrect ? "matchup-name-wrong" : ""}`}>{bottomTeam.name}</span>
-            {isBottomSelected && (
-              resultStatus
-                ? <span className={`matchup-result-icon ${resultStatus.winnerCorrect ? "matchup-result-correct" : "matchup-result-incorrect"}`}>
-                    {resultStatus.winnerCorrect ? "\u2713" : "\u2717"}
-                  </span>
-                : <span className="matchup-check">&#10003;</span>
+            <span className={`matchup-name ${isBottomSelected && ((resultStatus && !resultStatus.winnerCorrect) || isPickEliminated) ? "matchup-name-wrong" : ""}`}>{bottomTeam.name}</span>
+            {isBottomSelected && resultStatus && (
+              <span className={`matchup-result-icon ${resultStatus.winnerCorrect ? "matchup-result-correct" : "matchup-result-incorrect"}`}>
+                {resultStatus.winnerCorrect ? "\u2713" : "\u2717"}
+              </span>
+            )}
+            {isBottomSelected && isPickEliminated && (
+              <span className="matchup-result-icon matchup-result-incorrect">{"\u2717"}</span>
             )}
           </>
         ) : (
