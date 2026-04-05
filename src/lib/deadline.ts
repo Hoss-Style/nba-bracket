@@ -23,6 +23,12 @@ export function getTimeUntilDeadline(): {
   seconds: number;
   expired: boolean;
 } {
+  if (typeof window !== "undefined") {
+    const override = localStorage.getItem("debug_deadline_override");
+    if (override === "locked") return { days: 0, hours: 0, minutes: 0, seconds: 0, expired: true };
+    if (override === "open") return { days: 14, hours: 0, minutes: 0, seconds: 0, expired: false };
+  }
+
   const now = new Date().getTime();
   const deadline = new Date(PLAYOFF_DEADLINE).getTime();
   const diff = deadline - now;
