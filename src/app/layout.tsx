@@ -17,6 +17,17 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "2026 NBA Bracket Challenge",
   description: "Lew's Annual NBA Playoff Bracket Challenge - Pick your winners, call the upsets, and win the pot.",
+  openGraph: {
+    title: "2026 NBA Bracket Challenge",
+    description: "Pick your winners, call the upsets, and win the pot.",
+    siteName: "Lew's NBA Bracket Challenge",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "2026 NBA Bracket Challenge",
+    description: "Pick your winners, call the upsets, and win the pot.",
+  },
 };
 
 export default function RootLayout({
