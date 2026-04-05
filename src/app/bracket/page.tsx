@@ -5,20 +5,13 @@ import { useRouter } from "next/navigation";
 import Nav from "@/components/Nav";
 import Bracket from "@/components/Bracket";
 import MobileBracket from "@/components/MobileBracket";
-import { BracketPicks, Entry } from "@/lib/types";
+import { BracketPicks, BracketUser, Entry } from "@/lib/types";
 import { createEmptyPicks, isPicksComplete, countCompletedPicks } from "@/lib/emptyPicks";
 import { getEntryByEmail, updateEntry } from "@/lib/supabase";
 import { isBeforeDeadline } from "@/lib/deadline";
 import { getMatchupStatuses } from "@/lib/scoring";
 import { getActualResults } from "@/lib/supabase";
 import confetti from "canvas-confetti";
-
-interface BracketUser {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-}
 
 export default function BracketPage() {
   const router = useRouter();

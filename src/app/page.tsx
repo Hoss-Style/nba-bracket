@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Nav from "@/components/Nav";
+import Dashboard from "@/components/Dashboard";
+import { BracketUser } from "@/lib/types";
 import { getEntryByEmail, submitEntry, updateEntry } from "@/lib/supabase";
 import { createEmptyPicks } from "@/lib/emptyPicks";
-import { isBeforeDeadline } from "@/lib/deadline";
 
 type Step = "email" | "pin" | "register" | "forgot";
 
@@ -13,16 +15,16 @@ export default function Home() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("email");
   const [checking, setChecking] = useState(true);
+  const [loggedInUser, setLoggedInUser] = useState<BracketUser | null>(null);
 
-  // Auto-redirect if already logged in
+  // Check if already logged in
   useEffect(() => {
     const stored = localStorage.getItem("bracket_user");
     if (stored) {
-      router.replace(isBeforeDeadline() ? "/bracket" : "/scoreboard");
-    } else {
-      setChecking(false);
+      setLoggedInUser(JSON.parse(stored));
     }
-  }, [router]);
+    setChecking(false);
+  }, []);
   const [email, setEmail] = useState("");
   const [pin, setPin] = useState("");
   const [name, setName] = useState("");
@@ -72,16 +74,10 @@ export default function Home() {
         setLoading(false);
         return;
       }
-      // Store user info for bracket page
-      localStorage.setItem("bracket_user", JSON.stringify({
-        id: entry.id,
-        name: entry.name,
-        email: entry.email,
-        phone: entry.phone,
-      }));
-      // Has picks? Go to scoreboard. No picks? Go to bracket.
-      const hasPicks = entry.picks.westR1_1 !== null;
-      router.push(hasPicks ? "/scoreboard" : "/bracket");
+      // Store user info
+      const userData = { id: entry.id || "", name: entry.name, email: entry.email, phone: entry.phone };
+      localStorage.setItem("bracket_user", JSON.stringify(userData));
+      setLoggedInUser(userData);
     } catch {
       setError("Something went wrong. Try again.");
     } finally {
@@ -105,13 +101,9 @@ export default function Home() {
         submittedAt: new Date().toISOString(),
       });
       if (entry) {
-        localStorage.setItem("bracket_user", JSON.stringify({
-          id: entry.id,
-          name: entry.name,
-          email: entry.email,
-          phone: entry.phone,
-        }));
-        router.push("/bracket");
+        const userData = { id: entry.id || "", name: entry.name, email: entry.email, phone: entry.phone };
+        localStorage.setItem("bracket_user", JSON.stringify(userData));
+        setLoggedInUser(userData);
       } else {
         setError("Registration failed. Try again.");
       }
@@ -151,14 +143,9 @@ export default function Home() {
       if (!entry) { setError("Account not found."); setLoading(false); return; }
       const success = await updateEntry({ ...entry, pin: resetPin.trim() });
       if (success) {
-        localStorage.setItem("bracket_user", JSON.stringify({
-          id: entry.id,
-          name: entry.name,
-          email: entry.email,
-          phone: entry.phone,
-        }));
-        const hasPicks = entry.picks.westR1_1 !== null;
-        router.push(hasPicks ? "/scoreboard" : "/bracket");
+        const userData = { id: entry.id || "", name: entry.name, email: entry.email, phone: entry.phone };
+        localStorage.setItem("bracket_user", JSON.stringify(userData));
+        setLoggedInUser(userData);
       } else {
         setError("Failed to reset PIN. Try again.");
       }
@@ -170,6 +157,17 @@ export default function Home() {
   };
 
   if (checking) return null;
+
+  if (loggedInUser) {
+    return (
+      <>
+        <Nav />
+        <div className="nav-spacer">
+          <Dashboard user={loggedInUser} />
+        </div>
+      </>
+    );
+  }
 
   return (
     <div className="landing-page">
