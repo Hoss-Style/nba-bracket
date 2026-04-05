@@ -1960,49 +1960,96 @@ body {
   }
 }
 
-/* ========== HOME LAYOUT ========== */
-.home-layout {
+/* ========== FLOATING GROUP CHAT ========== */
+
+/* FAB bubble */
+.gchat-fab {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--gradient-accent);
+  border: none;
+  color: white;
   display: flex;
-  max-width: 1080px;
-  margin: 0 auto;
-  gap: 1rem;
-  padding: 0 1rem;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 200;
+  box-shadow: 0 4px 20px rgba(229, 96, 32, 0.35);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.home-main {
-  flex: 1;
-  min-width: 0;
+.gchat-fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 28px rgba(229, 96, 32, 0.45);
 }
 
-.home-sidebar {
-  width: 340px;
-  flex-shrink: 0;
-  padding-top: 1.5rem;
+.gchat-fab:active {
+  transform: scale(0.95);
 }
 
-@media (max-width: 860px) {
-  .home-layout {
-    flex-direction: column;
-    max-width: 600px;
-    padding: 0;
-  }
-
-  .home-sidebar {
-    width: 100%;
-    padding: 0 0.75rem 2rem;
-  }
+.gchat-fab-hidden {
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.5);
 }
 
-/* ========== GROUP CHAT ========== */
-.gchat {
+.gchat-fab-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 20px;
+  height: 20px;
+  background: var(--accent-red, #ef4444);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Overlay */
+.gchat-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 300;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 1rem;
+  animation: gchat-fade-in 0.15s ease;
+}
+
+@keyframes gchat-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Chat panel */
+.gchat-panel {
+  width: 380px;
+  max-height: 560px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
-  height: 520px;
-  position: sticky;
-  top: 80px;
+  overflow: hidden;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+  animation: gchat-slide-up 0.2s ease;
+}
+
+@keyframes gchat-slide-up {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .gchat-header {
@@ -2011,18 +2058,23 @@ body {
   justify-content: space-between;
   padding: 0.85rem 1rem;
   border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.gchat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .gchat-title {
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  color: var(--text-primary);
 }
 
 .gchat-count {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 700;
   color: var(--text-muted);
   background: rgba(255, 255, 255, 0.06);
@@ -2030,13 +2082,29 @@ body {
   border-radius: 10px;
 }
 
+.gchat-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.gchat-close:hover {
+  color: var(--text-primary);
+}
+
+/* Messages */
 .gchat-messages {
   flex: 1;
   overflow-y: auto;
   padding: 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .gchat-messages::-webkit-scrollbar {
@@ -2050,32 +2118,38 @@ body {
 
 .gchat-empty {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   text-align: center;
   padding: 2rem;
 }
 
+.gchat-empty-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
 .gchat-msg {
-  padding: 0.5rem 0.65rem;
+  padding: 0.5rem 0.7rem;
   background: rgba(255, 255, 255, 0.03);
   border-radius: 10px;
   border: 1px solid transparent;
 }
 
 .gchat-msg-me {
-  background: rgba(229, 96, 32, 0.06);
-  border-color: rgba(229, 96, 32, 0.12);
+  background: rgba(229, 96, 32, 0.07);
+  border-color: rgba(229, 96, 32, 0.15);
 }
 
 .gchat-msg-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.15rem;
 }
 
 .gchat-msg-name {
@@ -2089,7 +2163,7 @@ body {
 }
 
 .gchat-msg-time {
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   color: var(--text-muted);
 }
 
@@ -2100,23 +2174,26 @@ body {
   word-break: break-word;
 }
 
+/* Input */
 .gchat-input-row {
   display: flex;
   gap: 0.4rem;
   padding: 0.65rem;
   border-top: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.01);
 }
 
 .gchat-input {
   flex: 1;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem;
   font-size: 16px;
   color: var(--text-primary);
   outline: none;
   font-family: inherit;
+  transition: border-color 0.15s;
 }
 
 .gchat-input::placeholder {
@@ -2130,28 +2207,40 @@ body {
 .gchat-send {
   background: var(--gradient-accent);
   border: none;
-  border-radius: 8px;
-  width: 38px;
-  height: 38px;
+  border-radius: 10px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 1rem;
   cursor: pointer;
   flex-shrink: 0;
   transition: opacity 0.15s;
 }
 
 .gchat-send:disabled {
-  opacity: 0.4;
+  opacity: 0.3;
   cursor: default;
 }
 
-@media (max-width: 860px) {
-  .gchat {
-    height: 400px;
-    position: static;
+/* Mobile */
+@media (max-width: 480px) {
+  .gchat-overlay {
+    padding: 0;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .gchat-panel {
+    width: 100%;
+    max-height: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+
+  .gchat-fab {
+    bottom: 5rem;
   }
 }
 

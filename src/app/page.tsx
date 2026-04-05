@@ -162,15 +162,9 @@ export default function Home() {
       <>
         <Nav />
         <div className="nav-spacer">
-          <div className="home-layout">
-            <div className="home-main">
-              <Dashboard user={loggedInUser} />
-            </div>
-            <div className="home-sidebar">
-              <GroupChat userName={loggedInUser.name} />
-            </div>
-          </div>
+          <Dashboard user={loggedInUser} />
         </div>
+        <GroupChat userName={loggedInUser.name} />
       </>
     );
   }
