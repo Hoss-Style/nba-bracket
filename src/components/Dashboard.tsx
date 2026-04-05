@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { BracketUser, Entry, BracketPicks, MatchupPick } from "@/lib/types";
 import { getEntryByEmail, getAllEntries } from "@/lib/supabase";
-import { getTimeUntilDeadline, isBeforeDeadline, DEADLINE_DISPLAY } from "@/lib/deadline";
+import { getTimeUntilDeadline, isBeforeDeadline } from "@/lib/deadline";
 import { getTeamByAbbr } from "@/lib/teams";
 
 interface DashboardProps {
@@ -104,21 +104,19 @@ export default function Dashboard({ user }: DashboardProps) {
 
   return (
     <div className="dashboard">
-      {/* Welcome */}
-      <h1 className="dashboard-welcome">
-        Hey, {user.name} <span className="dashboard-wave">&#128075;</span>
-      </h1>
+      {/* Hero: Welcome + Countdown */}
+      <div className="dashboard-hero">
+        <h1 className="dashboard-welcome">
+          Hey, {user.name} <span className="dashboard-wave">&#128075;</span>
+        </h1>
 
-      {/* Countdown */}
-      <div className="dashboard-countdown">
         {countdown.expired ? (
           <div className="dashboard-expired">
             <span className="dashboard-expired-icon">&#127936;</span>
             <span>Playoffs Have Started!</span>
           </div>
         ) : (
-          <>
-            <div className="dashboard-countdown-label">Picks lock {DEADLINE_DISPLAY}</div>
+          <div className="dashboard-countdown">
             <div className="dashboard-countdown-grid">
               {[
                 { value: countdown.days, label: "Days" },
@@ -132,108 +130,120 @@ export default function Dashboard({ user }: DashboardProps) {
                 </div>
               ))}
             </div>
-          </>
+            <div className="dashboard-countdown-label">until picks lock</div>
+          </div>
         )}
       </div>
 
       {/* Bracket Status */}
-      <div className="dashboard-card">
-        <div className="dashboard-card-title">Your Bracket</div>
-        {loading ? (
-          <div style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>Loading...</div>
-        ) : hasSubmitted ? (
-          <>
-            <div className="dashboard-picks-summary">
-              <div className="dashboard-pick-row">
-                <span className="dashboard-pick-label">Champion</span>
-                {champion ? (
-                  <span
-                    className="dashboard-champion-badge"
-                    style={{ background: `${champion.primaryColor}20`, color: champion.primaryColor, border: `1px solid ${champion.primaryColor}40` }}
-                  >
-                    <span className="dashboard-champion-seed">{champion.seed}</span>
-                    {champion.name}
-                  </span>
-                ) : (
-                  <span style={{ color: "var(--text-muted)" }}>--</span>
-                )}
-              </div>
-              <div className="dashboard-pick-row">
-                <span className="dashboard-pick-label">Finals MVP</span>
-                <span className="dashboard-mvp-badge">{mvp || "--"}</span>
-              </div>
-            </div>
-            <div className="dashboard-actions">
-              <a href="/bracket" className="btn btn-primary dashboard-action-btn">View Bracket</a>
-              {beforeDeadline && (
-                <a href="/bracket" className="btn btn-secondary dashboard-action-btn" onClick={() => {
-                  sessionStorage.setItem("bracket_edit_mode", "true");
-                }}>Edit Picks</a>
-              )}
-              <a href="/scoreboard" className="btn btn-secondary dashboard-action-btn">Scoreboard</a>
-            </div>
-          </>
-        ) : (
-          <div className="dashboard-no-bracket">
-            <div className="dashboard-no-bracket-icon">&#128203;</div>
-            <p className="dashboard-no-bracket-text">
-              {beforeDeadline
-                ? "You haven't filled out your bracket yet!"
-                : "You didn't submit a bracket before the deadline."}
-            </p>
-            {beforeDeadline && (
-              <a href="/bracket" className="btn btn-accent dashboard-cta">
-                Make Your Picks &rarr;
-              </a>
-            )}
+      {loading ? (
+        <div className="dashboard-card">
+          <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", textAlign: "center", padding: "2rem 0" }}>Loading...</div>
+        </div>
+      ) : hasSubmitted ? (
+        <div className="dashboard-card dashboard-bracket-card">
+          <div className="dashboard-bracket-header">
+            <div className="dashboard-card-title">Your Picks</div>
+            <div className="dashboard-bracket-status">&#9989; Submitted</div>
           </div>
-        )}
-      </div>
+          <div className="dashboard-bracket-picks">
+            <div className="dashboard-champ-section">
+              {champion ? (
+                <>
+                  <div
+                    className="dashboard-champ-icon"
+                    style={{ background: `${champion.primaryColor}25`, borderColor: `${champion.primaryColor}50` }}
+                  >
+                    &#127942;
+                  </div>
+                  <div className="dashboard-champ-info">
+                    <span className="dashboard-champ-label">Champion</span>
+                    <span className="dashboard-champ-name" style={{ color: champion.primaryColor }}>
+                      {champion.name}
+                    </span>
+                  </div>
+                  <span className="dashboard-champ-seed" style={{ background: `${champion.primaryColor}20`, color: champion.primaryColor, border: `1px solid ${champion.primaryColor}40` }}>
+                    #{champion.seed} seed
+                  </span>
+                </>
+              ) : (
+                <span style={{ color: "var(--text-muted)" }}>No champion picked</span>
+              )}
+            </div>
+            <div className="dashboard-mvp-section">
+              <span className="dashboard-mvp-label">Finals MVP</span>
+              <span className="dashboard-mvp-name">{mvp || "--"}</span>
+            </div>
+          </div>
+          <div className="dashboard-actions">
+            <a href="/bracket" className="btn btn-primary dashboard-action-btn">View Bracket</a>
+            {beforeDeadline && (
+              <a href="/bracket" className="btn btn-secondary dashboard-action-btn" onClick={() => {
+                sessionStorage.setItem("bracket_edit_mode", "true");
+              }}>Edit Picks</a>
+            )}
+            <a href="/scoreboard" className="btn btn-secondary dashboard-action-btn">Scoreboard</a>
+          </div>
+        </div>
+      ) : (
+        <div className="dashboard-card dashboard-empty-card">
+          <div className="dashboard-empty-icon">&#128203;</div>
+          <p className="dashboard-empty-text">
+            {beforeDeadline
+              ? "You haven't filled out your bracket yet!"
+              : "You didn't submit a bracket before the deadline."}
+          </p>
+          {beforeDeadline && (
+            <a href="/bracket" className="btn btn-accent dashboard-cta">
+              Make Your Picks &rarr;
+            </a>
+          )}
+        </div>
+      )}
 
       {/* Community Stats */}
-      <div className="dashboard-card">
-        <div className="dashboard-card-title">Community</div>
-        {loading ? (
-          <div style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>Loading...</div>
-        ) : !stats ? (
-          <div className="dashboard-no-bracket">
-            <div className="dashboard-no-bracket-icon">&#128064;</div>
-            <p className="dashboard-no-bracket-text">No brackets submitted yet. Be the first!</p>
-          </div>
-        ) : (
-          <>
-            <div className="dashboard-stats-grid">
-              <div className="dashboard-stat">
-                <div className="dashboard-stat-value">{stats.totalEntries}</div>
-                <div className="dashboard-stat-label">Brackets Submitted</div>
-              </div>
-              {stats.topChampion && (
-                <div className="dashboard-stat">
-                  <div className="dashboard-stat-value" style={{ color: stats.topChampion.color }}>
-                    {stats.topChampion.pct}%
+      {!loading && (
+        <div className="dashboard-card">
+          <div className="dashboard-card-title">Community</div>
+          {!stats ? (
+            <div className="dashboard-empty-card" style={{ padding: "1rem 0" }}>
+              <div className="dashboard-empty-icon">&#128064;</div>
+              <p className="dashboard-empty-text">No brackets submitted yet. Be the first!</p>
+            </div>
+          ) : (
+            <>
+              <div className="dashboard-stats-row">
+                <div className="dashboard-stat-pill">
+                  <span className="dashboard-stat-num">{stats.totalEntries}</span>
+                  <span className="dashboard-stat-txt">entries</span>
+                </div>
+                {stats.topChampion && (
+                  <div className="dashboard-stat-pill">
+                    <span className="dashboard-stat-num" style={{ color: stats.topChampion.color }}>{stats.topChampion.pct}%</span>
+                    <span className="dashboard-stat-txt">pick <strong>{stats.topChampion.name}</strong></span>
                   </div>
-                  <div className="dashboard-stat-label">
-                    picked <strong>{stats.topChampion.name}</strong> to win it all
+                )}
+              </div>
+              {stats.topUpsets.length > 0 && (
+                <div className="dashboard-upsets">
+                  <div className="dashboard-upsets-title">Popular Upsets</div>
+                  <div className="dashboard-upsets-list">
+                    {stats.topUpsets.map((u) => (
+                      <div key={u.abbr} className="dashboard-upset-item">
+                        <span className="dashboard-upset-name">{u.name}</span>
+                        <div className="dashboard-upset-bar">
+                          <div className="dashboard-upset-fill" style={{ width: `${u.pct}%` }} />
+                        </div>
+                        <span className="dashboard-upset-pct">{u.pct}%</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
-            </div>
-            {stats.topUpsets.length > 0 && (
-              <div className="dashboard-upsets">
-                <div className="dashboard-upsets-title">Popular Upsets</div>
-                <div className="dashboard-upsets-list">
-                  {stats.topUpsets.map((u) => (
-                    <div key={u.abbr} className="dashboard-upset-item">
-                      <span className="dashboard-upset-name">{u.name}</span>
-                      <span className="dashboard-upset-pct">{u.pct}%</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
