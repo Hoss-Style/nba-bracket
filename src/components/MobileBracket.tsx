@@ -319,6 +319,16 @@ export default function MobileBracket({
         </span>
       </div>
 
+      {/* Back button above header */}
+      {!isFirstStep && (
+        <button
+          onClick={handlePrev}
+          className="btn btn-secondary mobile-back-top"
+        >
+          &larr; Back
+        </button>
+      )}
+
       {/* Step header */}
       <div className="mobile-step-header">
         <h2 className="mobile-step-title">{step.title}</h2>
@@ -418,28 +428,18 @@ export default function MobileBracket({
       </div>
 
       {/* Navigation */}
-      <div className="mobile-nav-btns">
-        <button
-          onClick={handlePrev}
-          disabled={isFirstStep}
-          className="btn btn-secondary mobile-nav-btn"
-          style={{ opacity: isFirstStep ? 0.3 : 1 }}
-        >
-          &larr; Back
-        </button>
-        {!isLastStep ? (
+      {!isLastStep && (
+        <div className="mobile-nav-btns">
           <button
             onClick={handleNext}
             disabled={!canAdvance()}
-            className={`btn mobile-nav-btn ${canAdvance() ? "btn-primary" : "btn-secondary"}`}
+            className={`btn mobile-nav-btn mobile-nav-btn-full ${canAdvance() ? "btn-primary" : "btn-secondary"}`}
             style={{ opacity: canAdvance() ? 1 : 0.4 }}
           >
             Next &rarr;
           </button>
-        ) : (
-          <div style={{ width: "100px" }} /> // spacer
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

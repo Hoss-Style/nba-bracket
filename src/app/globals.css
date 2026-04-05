@@ -1955,6 +1955,8 @@ body {
 /* ========== MOBILE BRACKET WIZARD ========== */
 .mobile-bracket {
   padding: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .mobile-progress {
@@ -2235,12 +2237,21 @@ body {
 .mobile-mvp-search-icon {
   position: absolute;
   left: 0.85rem;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 0;
+  height: 52px;
+  display: flex;
+  align-items: center;
   font-size: 1rem;
   color: var(--text-muted);
   pointer-events: none;
   z-index: 1;
+}
+
+.mobile-back-top {
+  align-self: flex-start;
+  font-size: 0.8rem;
+  padding: 0.4rem 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .mobile-mvp-hint {
@@ -2255,6 +2266,10 @@ body {
   gap: 1rem;
   padding-top: 0.5rem;
   padding-bottom: 4.5rem; /* Space for floating submit button */
+}
+
+.mobile-nav-btn-full {
+  width: 100%;
 }
 
 .mobile-nav-btn {
