@@ -8,6 +8,11 @@ export const PLAYOFF_DEADLINE = "2026-04-19T19:30:00Z";
 export const DEADLINE_DISPLAY = "Saturday, April 19th at 12:30 PM PST";
 
 export function isBeforeDeadline(): boolean {
+  if (typeof window !== "undefined") {
+    const override = localStorage.getItem("debug_deadline_override");
+    if (override === "locked") return false;
+    if (override === "open") return true;
+  }
   return new Date() < new Date(PLAYOFF_DEADLINE);
 }
 

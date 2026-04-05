@@ -22,6 +22,13 @@ interface StatusInfo {
 export default function DebugPage() {
   const [status, setStatus] = useState<StatusInfo | null>(null);
   const [loading, setLoading] = useState("");
+  const [deadlineOverride, setDeadlineOverride] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("debug_deadline_override") || "none";
+    }
+    return "none";
+  });
+  const [localStorageView, setLocalStorageView] = useState(false);
 
   async function applyScenario(
     label: string,
@@ -64,6 +71,54 @@ export default function DebugPage() {
     }
     setStatus({ label: "All entries cleared", champion: "", mvp: "" });
     setLoading("");
+  }
+
+  function setDeadlineMode(mode: string) {
+    if (mode === "none") {
+      localStorage.removeItem("debug_deadline_override");
+    } else {
+      localStorage.setItem("debug_deadline_override", mode);
+    }
+    setDeadlineOverride(mode);
+    setStatus({ label: `Deadline: ${mode === "locked" ? "LOCKED (closed)" : mode === "open" ? "OPEN (accepting picks)" : "Using real deadline"}`, champion: "", mvp: "" });
+  }
+
+  function clearMyBracket() {
+    const stored = localStorage.getItem("bracket_user");
+    if (!stored) {
+      setStatus({ label: "No user logged in", champion: "", mvp: "" });
+      return;
+    }
+    const user = JSON.parse(stored);
+    const entries = JSON.parse(localStorage.getItem("bracket_entries") || "[]");
+    const filtered = entries.filter((e: { email: string }) => e.email.toLowerCase() !== user.email.toLowerCase());
+    localStorage.setItem("bracket_entries", JSON.stringify(filtered));
+    setStatus({ label: `Cleared bracket for ${user.name}`, champion: "", mvp: "" });
+  }
+
+  function clearSocialData() {
+    localStorage.removeItem("bracket_reactions");
+    localStorage.removeItem("bracket_comments");
+    setStatus({ label: "All comments & reactions cleared", champion: "", mvp: "" });
+  }
+
+  function clearCurrentUser() {
+    localStorage.removeItem("bracket_user");
+    setStatus({ label: "Logged out — will redirect to home on next page load", champion: "", mvp: "" });
+  }
+
+  function getLocalStorageData(): Record<string, string> {
+    const data: Record<string, string> = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith("bracket_")) {
+        data[key] = localStorage.getItem(key) || "";
+      }
+    }
+    const debugKey = "debug_deadline_override";
+    const debugVal = localStorage.getItem(debugKey);
+    if (debugVal) data[debugKey] = debugVal;
+    return data;
   }
 
 
@@ -160,6 +215,138 @@ export default function DebugPage() {
               Creates: Perfect Pete (all higher seeds), Upset Ursula (all upsets), Random Randy
             </p>
           </div>
+
+          {/* Deadline Override */}
+          <div style={{ marginBottom: "2rem" }}>
+            <h3 style={{ marginBottom: "0.75rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-secondary)" }}>
+              Deadline Override
+            </h3>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem" }}>
+              {[
+                { mode: "none", label: "Real Deadline", color: "rgba(255,255,255,0.1)" },
+                { mode: "open", label: "Force Open", color: "rgba(34,197,94,0.25)" },
+                { mode: "locked", label: "Force Locked", color: "rgba(239,68,68,0.3)" },
+              ].map((opt) => (
+                <button
+                  key={opt.mode}
+                  onClick={() => setDeadlineMode(opt.mode)}
+                  className="btn"
+                  style={{
+                    padding: "0.75rem",
+                    fontSize: "0.85rem",
+                    background: deadlineOverride === opt.mode ? opt.color : "rgba(255,255,255,0.05)",
+                    border: `2px solid ${deadlineOverride === opt.mode ? opt.color : "rgba(255,255,255,0.1)"}`,
+                    color: deadlineOverride === opt.mode ? "white" : "var(--text-secondary)",
+                    borderRadius: "0.5rem",
+                    fontWeight: deadlineOverride === opt.mode ? 700 : 400,
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "0.5rem" }}>
+              Override affects all pages. Refresh after changing to see the effect.
+            </p>
+          </div>
+
+          {/* Data Management */}
+          <div style={{ marginBottom: "2rem" }}>
+            <h3 style={{ marginBottom: "0.75rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-secondary)" }}>
+              Data Management
+            </h3>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+              <button
+                onClick={clearMyBracket}
+                className="btn"
+                style={{
+                  padding: "0.75rem",
+                  fontSize: "0.85rem",
+                  background: "rgba(251,191,36,0.1)",
+                  border: "1px solid rgba(251,191,36,0.25)",
+                  color: "#fbbf24",
+                  borderRadius: "0.5rem",
+                }}
+              >
+                Clear My Bracket
+              </button>
+              <button
+                onClick={clearSocialData}
+                className="btn"
+                style={{
+                  padding: "0.75rem",
+                  fontSize: "0.85rem",
+                  background: "rgba(251,191,36,0.1)",
+                  border: "1px solid rgba(251,191,36,0.25)",
+                  color: "#fbbf24",
+                  borderRadius: "0.5rem",
+                }}
+              >
+                Clear Comments & Reactions
+              </button>
+              <button
+                onClick={clearCurrentUser}
+                className="btn"
+                style={{
+                  padding: "0.75rem",
+                  fontSize: "0.85rem",
+                  background: "rgba(239,68,68,0.15)",
+                  border: "1px solid rgba(239,68,68,0.3)",
+                  color: "#ef4444",
+                  borderRadius: "0.5rem",
+                }}
+              >
+                Log Out Current User
+              </button>
+              <button
+                onClick={() => setLocalStorageView(!localStorageView)}
+                className="btn"
+                style={{
+                  padding: "0.75rem",
+                  fontSize: "0.85rem",
+                  background: "rgba(99,102,241,0.1)",
+                  border: "1px solid rgba(99,102,241,0.25)",
+                  color: "#818cf8",
+                  borderRadius: "0.5rem",
+                }}
+              >
+                {localStorageView ? "Hide" : "View"} localStorage
+              </button>
+            </div>
+          </div>
+
+          {/* localStorage Viewer */}
+          {localStorageView && (
+            <div style={{
+              marginBottom: "2rem",
+              background: "rgba(0,0,0,0.3)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "0.75rem",
+              padding: "1rem",
+              maxHeight: "400px",
+              overflow: "auto",
+            }}>
+              <h4 style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "0.75rem" }}>
+                localStorage (bracket_* keys)
+              </h4>
+              {Object.entries(getLocalStorageData()).map(([key, value]) => (
+                <div key={key} style={{ marginBottom: "0.75rem" }}>
+                  <div style={{ fontSize: "0.75rem", color: "#818cf8", fontWeight: 600, marginBottom: "0.2rem" }}>{key}</div>
+                  <pre style={{
+                    fontSize: "0.7rem",
+                    color: "var(--text-secondary)",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-all",
+                    margin: 0,
+                    maxHeight: "120px",
+                    overflow: "auto",
+                  }}>
+                    {(() => { try { return JSON.stringify(JSON.parse(value), null, 2); } catch { return value; } })()}
+                  </pre>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Status Display */}
           {status && (
