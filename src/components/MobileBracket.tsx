@@ -348,19 +348,20 @@ export default function MobileBracket({
         ) : (
           // MVP step
           <div className="mobile-mvp">
-            <div className="finals-trophy" style={{ fontSize: "3rem", textAlign: "center" }}>&#127942;</div>
+            <div className="mobile-mvp-trophy">&#127942;</div>
             {finalsMVP ? (
-              <div style={{ textAlign: "center" }}>
-                <div className="mvp-selected">
+              <div className="mobile-mvp-card">
+                <div className="mobile-mvp-card-label">Your Finals MVP</div>
+                <div className="mobile-mvp-player">
                   <span>{finalsMVP}</span>
                   {mvpCorrect !== null && mvpCorrect !== undefined && (
                     <span className={`matchup-result-icon ${mvpCorrect ? "matchup-result-correct" : "matchup-result-incorrect"}`}>
-                      {mvpCorrect ? " \u2713" : " \u2717"}
+                      {mvpCorrect ? "\u2713" : "\u2717"}
                     </span>
                   )}
                   {!disabled && (
                     <button
-                      className="mvp-selected-clear"
+                      className="mobile-mvp-player-clear"
                       onClick={() => { onFinalsMVPChange(""); setMvpQuery(""); }}
                     >
                       &times;
@@ -369,8 +370,8 @@ export default function MobileBracket({
                 </div>
               </div>
             ) : (
-              <div className="mvp-autocomplete" ref={mvpRef} style={{ maxWidth: "100%" }}>
-                <span className="mvp-search-icon">&#128269;</span>
+              <div className="mobile-mvp-search" ref={mvpRef}>
+                <span className="mobile-mvp-search-icon">&#128269;</span>
                 <input
                   type="text"
                   className="form-input"
@@ -409,7 +410,7 @@ export default function MobileBracket({
                     </div>
                   );
                 })()}
-                <div className="mvp-hint">Pick from either Finals team</div>
+                <div className="mobile-mvp-hint">Pick from either Finals team</div>
               </div>
             )}
           </div>
