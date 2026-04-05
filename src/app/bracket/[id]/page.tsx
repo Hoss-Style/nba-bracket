@@ -7,6 +7,7 @@ import Bracket from "@/components/Bracket";
 import { Entry, Reaction, Comment, MatchupResultStatus } from "@/lib/types";
 import { getEntryById, getActualResults, getCommentReactions, addReaction, getComments, addComment } from "@/lib/supabase";
 import { getMatchupStatuses, getEliminatedTeams } from "@/lib/scoring";
+import Toast from "@/components/Toast";
 
 export default function ViewBracketPage() {
   const params = useParams();
@@ -17,7 +18,7 @@ export default function ViewBracketPage() {
   const [matchupStatuses, setMatchupStatuses] = useState<Record<string, MatchupResultStatus> | null>(null);
   const [mvpCorrect, setMvpCorrect] = useState<boolean | null>(null);
   const [eliminatedTeams, setEliminatedTeams] = useState<Set<string>>(new Set());
-  const [copied, setCopied] = useState(false);
+  const [toast, setToast] = useState<{ show: boolean; message: string; type: "success" | "error" }>({ show: false, message: "", type: "success" });
   const [commentReactions, setCommentReactions] = useState<Record<string, Reaction[]>>({});
   const [activeReactionPicker, setActiveReactionPicker] = useState<string | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -80,18 +81,15 @@ export default function ViewBracketPage() {
     const url = window.location.href;
     try {
       await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setToast({ show: true, message: "Link copied!", type: "success" });
     } catch {
-      // Fallback for older browsers
       const input = document.createElement("input");
       input.value = url;
       document.body.appendChild(input);
       input.select();
       document.execCommand("copy");
       document.body.removeChild(input);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setToast({ show: true, message: "Link copied!", type: "success" });
     }
   };
 
@@ -186,7 +184,7 @@ export default function ViewBracketPage() {
                 <span className="bracket-view-name">{entry.name}&apos;s Bracket</span>
                 <div className="bracket-view-actions">
                   <button onClick={handleShare} className="btn btn-secondary btn-sm">
-                    {copied ? "Copied!" : "Share"}
+                    Share
                   </button>
                   <button onClick={handleExport} disabled={exporting} className="btn btn-secondary btn-sm">
                     {exporting ? "Saving..." : "Export"}
@@ -276,6 +274,7 @@ export default function ViewBracketPage() {
           )}
         </div>
       </div>
+      <Toast show={toast.show} message={toast.message} type={toast.type} onClose={() => setToast(t => ({ ...t, show: false }))} />
     </>
   );
 }

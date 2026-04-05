@@ -5,6 +5,7 @@ import { BracketUser, Entry, BracketPicks, MatchupPick } from "@/lib/types";
 import { getEntryByEmail, getAllEntries } from "@/lib/supabase";
 import { getTimeUntilDeadline, isBeforeDeadline } from "@/lib/deadline";
 import { getTeamByAbbr } from "@/lib/teams";
+import { SkeletonCard } from "@/components/Skeleton";
 
 interface DashboardProps {
   user: BracketUser;
@@ -137,9 +138,10 @@ export default function Dashboard({ user }: DashboardProps) {
 
       {/* Bracket Status */}
       {loading ? (
-        <div className="dashboard-card">
-          <div style={{ color: "var(--text-muted)", fontSize: "0.9rem", textAlign: "center", padding: "2rem 0" }}>Loading...</div>
-        </div>
+        <>
+          <SkeletonCard />
+          <SkeletonCard />
+        </>
       ) : hasSubmitted ? (
         <div className="dashboard-card dashboard-bracket-card">
           <div className="dashboard-bracket-header">

@@ -200,6 +200,7 @@ export default function MobileBracket({
   const step = steps[currentStep];
   const isLastStep = currentStep === steps.length - 1;
   const isFirstStep = currentStep === 0;
+  const [animDirection, setAnimDirection] = useState<"forward" | "back">("forward");
 
   const canAdvance = () => {
     if (step.type === "mvp") return finalsMVP.trim() !== "";
@@ -210,10 +211,16 @@ export default function MobileBracket({
   };
 
   const handleNext = () => {
-    if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
+    if (currentStep < steps.length - 1) {
+      setAnimDirection("forward");
+      setCurrentStep(currentStep + 1);
+    }
   };
   const handlePrev = () => {
-    if (currentStep > 0) setCurrentStep(currentStep - 1);
+    if (currentStep > 0) {
+      setAnimDirection("back");
+      setCurrentStep(currentStep - 1);
+    }
   };
 
   const renderTeamButton = (
@@ -336,7 +343,7 @@ export default function MobileBracket({
       </div>
 
       {/* Step content */}
-      <div className="mobile-step-content">
+      <div key={currentStep} className={`mobile-step-content mobile-step-enter-${animDirection}`}>
         {step.type === "matchups" ? (
           step.matchups.map((m) => {
             const pick = picks[m.key] as MatchupPick | null;

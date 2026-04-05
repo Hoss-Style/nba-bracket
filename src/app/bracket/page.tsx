@@ -12,13 +12,14 @@ import { isBeforeDeadline } from "@/lib/deadline";
 import { getMatchupStatuses, getEliminatedTeams } from "@/lib/scoring";
 import { getActualResults } from "@/lib/supabase";
 import confetti from "canvas-confetti";
+import Toast from "@/components/Toast";
+import { SkeletonCard } from "@/components/Skeleton";
 
 export default function BracketPage() {
   const router = useRouter();
   const [picks, setPicks] = useState<BracketPicks>(createEmptyPicks());
   const [finalsMVP, setFinalsMVP] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
   const [user, setUser] = useState<BracketUser | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [onMvpStep, setOnMvpStep] = useState(false);
@@ -27,7 +28,7 @@ export default function BracketPage() {
   const [matchupStatuses, setMatchupStatuses] = useState<Record<string, import("@/lib/types").MatchupResultStatus> | null>(null);
   const [mvpCorrect, setMvpCorrect] = useState<boolean | null>(null);
   const [eliminatedTeams, setEliminatedTeams] = useState<Set<string>>(new Set());
-  const [copied, setCopied] = useState(false);
+  const [toast, setToast] = useState<{ show: boolean; message: string; type: "success" | "error" }>({ show: false, message: "", type: "success" });
   const [exporting, setExporting] = useState(false);
   const bracketRef = useRef<HTMLDivElement>(null);
 
@@ -91,16 +92,16 @@ export default function BracketPage() {
   const handleSubmit = async () => {
     if (!user) return;
     if (locked) {
-      setError("Submissions are locked. The playoffs have begun!");
+      setToast({ show: true, message: "Submissions are locked. The playoffs have begun!", type: "error" });
       return;
     }
     if (!allComplete) {
-      setError("Complete all picks including Finals MVP first.");
+      setToast({ show: true, message: "Complete all picks including Finals MVP first.", type: "error" });
       return;
     }
 
     setSubmitting(true);
-    setError("");
+    setToast({ show: false, message: "", type: "success" });
 
     try {
       const existing = await getEntryByEmail(user.email);
@@ -132,11 +133,11 @@ export default function BracketPage() {
             colors: ["#7b2d8e", "#e56020", "#ff8844"],
           }), 600);
         } else {
-          setError("Failed to save. Try again.");
+          setToast({ show: true, message: "Failed to save. Try again.", type: "error" });
         }
       }
     } catch {
-      setError("Failed to save. Try again.");
+      setToast({ show: true, message: "Failed to save. Try again.", type: "error" });
     } finally {
       setSubmitting(false);
     }
@@ -147,11 +148,9 @@ export default function BracketPage() {
     const url = `${window.location.origin}/bracket/${entryId}`;
     try {
       await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setToast({ show: true, message: "Link copied!", type: "success" });
     } catch {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setToast({ show: true, message: "Link copied!", type: "success" });
     }
   };
 
@@ -190,8 +189,9 @@ export default function BracketPage() {
       <>
         <Nav />
         <div className="nav-spacer">
-          <div style={{ textAlign: "center", padding: "3rem", color: "var(--text-muted)" }}>
-            Loading...
+          <div style={{ maxWidth: "600px", margin: "0 auto", padding: "2rem 1rem" }}>
+            <SkeletonCard />
+            <SkeletonCard />
           </div>
         </div>
       </>
@@ -209,7 +209,7 @@ export default function BracketPage() {
               <span className="bracket-view-name">{user.name}&apos;s Bracket</span>
               <div className="bracket-view-actions">
                 <button onClick={handleShare} className="btn btn-secondary btn-sm">
-                  {copied ? "Copied!" : "Share"}
+                  Share
                 </button>
                 <button onClick={handleExport} disabled={exporting} className="btn btn-secondary btn-sm">
                   {exporting ? "Saving..." : "Export"}
@@ -306,15 +306,7 @@ export default function BracketPage() {
             </button>
           </div>
 
-          {error && (
-            <div style={{
-              position: "fixed", bottom: "5rem", left: "50%", transform: "translateX(-50%)",
-              background: "rgba(255,71,87,0.9)", color: "white", padding: "0.75rem 1.5rem",
-              borderRadius: "10px", fontSize: "0.85rem", zIndex: 150, textAlign: "center",
-            }}>
-              {error}
-            </div>
-          )}
+          <Toast show={toast.show} message={toast.message} type={toast.type} onClose={() => setToast(t => ({ ...t, show: false }))} />
         </div>
       </div>
     </>

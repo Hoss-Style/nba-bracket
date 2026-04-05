@@ -7,6 +7,7 @@ import { getAllEntries, getActualResults } from "@/lib/supabase";
 import { calculateScore, calculateMaxPotential } from "@/lib/scoring";
 import { getTeamByAbbr } from "@/lib/teams";
 import { isBeforeDeadline } from "@/lib/deadline";
+import { SkeletonRows } from "@/components/Skeleton";
 
 interface RankedEntry {
   id: string;
@@ -102,8 +103,8 @@ export default function ScoreboardPage() {
         <div className="page-container" style={{ paddingTop: "1rem" }}>
 
           {loading ? (
-            <div style={{ textAlign: "center", padding: "3rem", color: "var(--text-muted)" }}>
-              Loading scoreboard...
+            <div style={{ padding: "1rem 0" }}>
+              <SkeletonRows count={6} />
             </div>
           ) : rankings.length === 0 ? (
             <div style={{ textAlign: "center", padding: "3rem" }}>
