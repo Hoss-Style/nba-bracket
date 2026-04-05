@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Nav from "@/components/Nav";
 import Dashboard from "@/components/Dashboard";
@@ -12,7 +11,6 @@ import { createEmptyPicks } from "@/lib/emptyPicks";
 type Step = "email" | "pin" | "register" | "forgot";
 
 export default function Home() {
-  const router = useRouter();
   const [step, setStep] = useState<Step>("email");
   const [checking, setChecking] = useState(true);
   const [loggedInUser, setLoggedInUser] = useState<BracketUser | null>(null);
