@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Nav from "@/components/Nav";
 import Dashboard from "@/components/Dashboard";
-import GroupChat from "@/components/GroupChat";
+import CommunityFeed from "@/components/CommunityFeed";
+import PrizePoolCard from "@/components/PrizePoolCard";
 import { BracketUser } from "@/lib/types";
 import { getEntryByEmail, submitEntry, updateEntry } from "@/lib/supabase";
 import { createEmptyPicks } from "@/lib/emptyPicks";
@@ -162,16 +163,20 @@ export default function Home() {
       <>
         <Nav />
         <div className="nav-spacer">
-          <Dashboard user={loggedInUser} />
+          <div className="home-logged-layout">
+            <Dashboard user={loggedInUser} />
+            <PrizePoolCard />
+            <CommunityFeed userName={loggedInUser.name} />
+          </div>
         </div>
-        <GroupChat userName={loggedInUser.name} />
       </>
     );
   }
 
   return (
     <div className="landing-page">
-      <div className="landing-content">
+      <div className="landing-hero">
+        <div className="landing-content">
         {/* Logo */}
         <div className="landing-logo">
           <Image
@@ -369,7 +374,10 @@ export default function Home() {
             </>
           )}
         </div>
+        </div>
       </div>
+      <PrizePoolCard />
+      <CommunityFeed userName={null} />
     </div>
   );
 }
