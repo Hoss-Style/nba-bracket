@@ -1479,23 +1479,40 @@ body {
 /* ========== SCORING TABLE ========== */
 .scoring-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   margin: 1rem 0;
 }
 
+.scoring-table th:first-child,
+.scoring-table td:first-child {
+  width: 38%;
+}
+
 .scoring-table th, .scoring-table td {
-  padding: 0.5rem 0.75rem;
+  padding: 0.55rem 0.6rem;
   text-align: center;
   font-size: 0.8rem;
   border-bottom: 1px solid var(--border);
 }
 
-.scoring-table th {
+.scoring-table tbody td:not(:first-child) {
+  font-variant-numeric: tabular-nums;
+}
+
+.scoring-table thead th {
+  padding: 0.65rem 0.6rem;
+  background: rgba(255, 255, 255, 0.04);
   color: var(--text-muted);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-size: 0.65rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.scoring-table thead th:first-child {
+  text-align: left;
 }
 
 .scoring-table td {
@@ -1506,6 +1523,25 @@ body {
   text-align: left;
   color: var(--text-primary);
   font-weight: 500;
+}
+
+.scoring-table-na {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.scoring-table-mvp-row td {
+  border-bottom: none;
+}
+
+.scoring-table-mvp-row {
+  background: rgba(229, 96, 32, 0.08);
+  box-shadow: inset 0 1px 0 rgba(229, 96, 32, 0.22);
+}
+
+.scoring-table-mvp-points {
+  color: var(--accent-gold);
+  font-weight: 700;
 }
 
 /* ========== MVP INPUT ========== */
