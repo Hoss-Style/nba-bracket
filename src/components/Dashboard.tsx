@@ -18,7 +18,7 @@ interface CommunityStats {
 }
 
 function computeCommunityStats(entries: Entry[]): CommunityStats | null {
-  const submitted = entries.filter((e) => e.picks.westR1_1 !== null);
+  const submitted = entries.filter((e) => e.picks?.westR1_1 != null);
   if (submitted.length === 0) return null;
 
   // Most picked champion
@@ -85,7 +85,7 @@ export default function Dashboard({ user }: DashboardProps) {
           getEntryByEmail(user.email),
           getAllEntries(),
         ]);
-        if (entry && entry.picks.westR1_1 !== null) {
+        if (entry && entry.picks?.westR1_1 != null) {
           setUserEntry(entry);
         }
         setStats(computeCommunityStats(allEntries));

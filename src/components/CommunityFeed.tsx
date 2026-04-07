@@ -14,7 +14,9 @@ const PICKER_EMOJIS = [
 ] as const;
 
 function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
+  const t = new Date(dateStr).getTime();
+  if (Number.isNaN(t)) return "—";
+  const diff = Date.now() - t;
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;
@@ -24,15 +26,16 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`;
 }
 
-function avatarInitial(name: string): string {
-  const t = name.trim();
+function avatarInitial(name: string | undefined | null): string {
+  const t = (name ?? "").trim();
   return t ? t[0].toUpperCase() : "?";
 }
 
-function avatarStyle(name: string): { background: string; color: string } {
+function avatarStyle(name: string | undefined | null): { background: string; color: string } {
+  const s = name ?? "";
   let h = 0;
-  for (let i = 0; i < name.length; i++) {
-    h = name.charCodeAt(i) + ((h << 5) - h);
+  for (let i = 0; i < s.length; i++) {
+    h = s.charCodeAt(i) + ((h << 5) - h);
   }
   const hue = Math.abs(h) % 360;
   return {
@@ -169,8 +172,11 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
             </div>
           ) : (
             sorted.map((msg) => {
+              const body = msg.text ?? "";
               const isMe = userName && msg.userName === userName;
-              const key = msg.id ?? `${msg.createdAt}-${msg.userName}-${msg.text.slice(0, 12)}`;
+              const key =
+                msg.id ??
+                `${msg.createdAt ?? ""}-${msg.userName ?? ""}-${body.slice(0, 12)}`;
               return (
                 <article key={key} className={`community-feed-post ${isMe ? "community-feed-post-me" : ""}`}>
                   <div
@@ -182,16 +188,16 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
                   </div>
                   <div className="community-feed-post-main">
                     <header className="community-feed-post-meta">
-                      <span className="community-feed-author">{msg.userName}</span>
+                      <span className="community-feed-author">{msg.userName ?? ""}</span>
                       {isMe && <span className="community-feed-you">you</span>}
                       <span className="community-feed-dot" aria-hidden>
                         ·
                       </span>
-                      <time className="community-feed-time" dateTime={msg.createdAt}>
-                        {timeAgo(msg.createdAt)}
+                      <time className="community-feed-time" dateTime={msg.createdAt ?? ""}>
+                        {timeAgo(msg.createdAt ?? "")}
                       </time>
                     </header>
-                    <p className="community-feed-body">{msg.text}</p>
+                    <p className="community-feed-body">{body}</p>
                   </div>
                 </article>
               );

@@ -1,4 +1,23 @@
 import { Entry, BracketPicks, Reaction, Comment } from "./types";
+import { createEmptyPicks } from "./emptyPicks";
+
+function normalizePicks(raw: unknown): BracketPicks {
+  const base = createEmptyPicks();
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    return { ...base, ...(raw as Partial<BracketPicks>) };
+  }
+  return base;
+}
+
+function normalizeCommentRow(row: Record<string, unknown>): Comment {
+  return {
+    id: row.id as string | undefined,
+    entryId: String(row.entryId ?? row.entry_id ?? ""),
+    userName: String(row.userName ?? row.user_name ?? ""),
+    text: String(row.text ?? ""),
+    createdAt: String(row.createdAt ?? row.created_at ?? ""),
+  };
+}
 
 // Supabase configuration - set these in .env.local
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -60,7 +79,7 @@ export async function getAllEntries(): Promise<Entry[]> {
     email: row.email,
     phone: row.phone || "",
     pin: row.pin || "",
-    picks: row.picks as BracketPicks,
+    picks: normalizePicks(row.picks),
     submittedAt: row.submitted_at,
   }));
 }
@@ -86,7 +105,7 @@ export async function getEntryByEmail(email: string): Promise<Entry | null> {
     email: data[0].email,
     phone: data[0].phone || "",
     pin: data[0].pin || "",
-    picks: data[0].picks as BracketPicks,
+    picks: normalizePicks(data[0].picks),
     submittedAt: data[0].submitted_at,
   };
 }
@@ -110,7 +129,7 @@ export async function getEntryById(id: string): Promise<Entry | null> {
     email: data[0].email,
     phone: data[0].phone || "",
     pin: data[0].pin || "",
-    picks: data[0].picks as BracketPicks,
+    picks: normalizePicks(data[0].picks),
     submittedAt: data[0].submitted_at,
   };
 }
@@ -252,9 +271,19 @@ export async function addReaction(reaction: Omit<Reaction, "id">): Promise<boole
 
 export async function getComments(entryId: string): Promise<Comment[]> {
   if (!isConfigured()) {
-    const stored = localStorage.getItem("bracket_comments");
-    const all: Comment[] = stored ? JSON.parse(stored) : [];
-    return all.filter((c) => c.entryId === entryId);
+    try {
+      const stored = localStorage.getItem("bracket_comments");
+      if (!stored) return [];
+      const parsed = JSON.parse(stored) as unknown;
+      if (!Array.isArray(parsed)) return [];
+      return parsed.flatMap((r) => {
+        if (!r || typeof r !== "object") return [];
+        const c = normalizeCommentRow(r as Record<string, unknown>);
+        return c.entryId === entryId ? [c] : [];
+      });
+    } catch {
+      return [];
+    }
   }
 
   const res = await fetch(
@@ -263,22 +292,29 @@ export async function getComments(entryId: string): Promise<Comment[]> {
   );
   if (!res.ok) return [];
   const data = await res.json();
-  return data.map((row: Record<string, unknown>) => ({
-    id: row.id,
-    entryId: row.entry_id,
-    userName: row.user_name,
-    text: row.text,
-    createdAt: row.created_at,
-  }));
+  return data.map((row: Record<string, unknown>) => normalizeCommentRow(row));
 }
 
 export async function addComment(comment: Omit<Comment, "id">): Promise<boolean> {
   if (!isConfigured()) {
-    const stored = localStorage.getItem("bracket_comments");
-    const all: Comment[] = stored ? JSON.parse(stored) : [];
-    all.push({ ...comment, id: crypto.randomUUID() });
-    localStorage.setItem("bracket_comments", JSON.stringify(all));
-    return true;
+    try {
+      const stored = localStorage.getItem("bracket_comments");
+      let all: Comment[] = [];
+      if (stored) {
+        const parsed = JSON.parse(stored) as unknown;
+        if (Array.isArray(parsed)) {
+          all = parsed.flatMap((r) => {
+            if (!r || typeof r !== "object") return [];
+            return [normalizeCommentRow(r as Record<string, unknown>)];
+          });
+        }
+      }
+      all.push({ ...comment, id: crypto.randomUUID() });
+      localStorage.setItem("bracket_comments", JSON.stringify(all));
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   const res = await fetch(`${SUPABASE_URL}/rest/v1/comments`, {
@@ -298,6 +334,21 @@ export async function addComment(comment: Omit<Comment, "id">): Promise<boolean>
 
 function getLocalEntries(): Entry[] {
   if (typeof window === "undefined") return [];
-  const stored = localStorage.getItem("bracket_entries");
-  return stored ? JSON.parse(stored) : [];
+  try {
+    const stored = localStorage.getItem("bracket_entries");
+    if (!stored) return [];
+    const parsed = JSON.parse(stored) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((row: Record<string, unknown>) => ({
+      id: row.id as string | undefined,
+      name: String(row.name ?? ""),
+      email: String(row.email ?? ""),
+      phone: String(row.phone ?? ""),
+      pin: String(row.pin ?? ""),
+      picks: normalizePicks(row.picks),
+      submittedAt: String(row.submitted_at ?? row.submittedAt ?? ""),
+    }));
+  } catch {
+    return [];
+  }
 }

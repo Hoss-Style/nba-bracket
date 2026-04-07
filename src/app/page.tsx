@@ -6,6 +6,7 @@ import Nav from "@/components/Nav";
 import Dashboard from "@/components/Dashboard";
 import CommunityFeed from "@/components/CommunityFeed";
 import PrizePoolCard from "@/components/PrizePoolCard";
+import HomeSectionTabs from "@/components/HomeSectionTabs";
 import { BracketUser } from "@/lib/types";
 import { getEntryByEmail, submitEntry, updateEntry } from "@/lib/supabase";
 import { createEmptyPicks } from "@/lib/emptyPicks";
@@ -164,9 +165,17 @@ export default function Home() {
         <Nav />
         <div className="nav-spacer">
           <div className="home-logged-layout">
-            <Dashboard user={loggedInUser} />
-            <PrizePoolCard />
-            <CommunityFeed userName={loggedInUser.name} />
+            <HomeSectionTabs
+              tabs={[
+                { id: "home", label: "Home", content: <Dashboard user={loggedInUser} /> },
+                { id: "prizes", label: "Prize pool", content: <PrizePoolCard /> },
+                {
+                  id: "community",
+                  label: "Community",
+                  content: <CommunityFeed userName={loggedInUser.name} />,
+                },
+              ]}
+            />
           </div>
         </div>
       </>
@@ -376,8 +385,6 @@ export default function Home() {
         </div>
         </div>
       </div>
-      <PrizePoolCard />
-      <CommunityFeed userName={null} />
     </div>
   );
 }

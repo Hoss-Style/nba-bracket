@@ -264,12 +264,61 @@ body {
 .home-logged-layout {
   max-width: 640px;
   margin: 0 auto;
-  padding: 0 1rem 2rem;
+  padding: 0;
   width: 100%;
 }
 
-.home-logged-layout .community-feed {
-  margin-top: 1.25rem;
+/* ========== HOME SECTION TABS ========== */
+.home-section-tabs {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 1rem 1rem 2rem;
+  padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+  box-sizing: border-box;
+}
+
+.home-section-tabs-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 1rem;
+  padding: 0.35rem 0 0.65rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.home-section-tab {
+  flex: 1;
+  min-width: 0;
+  padding: 0.75rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.home-section-tab:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.home-section-tab-active {
+  color: var(--text-primary);
+  border-color: var(--accent-orange);
+  background: rgba(229, 96, 32, 0.1);
+}
+
+.home-section-tab-panel {
+  min-height: 0;
+}
+
+.home-section-tabs .prize-pool-card,
+.home-section-tabs .community-feed {
+  margin-top: 0;
 }
 
 .landing-logo {
