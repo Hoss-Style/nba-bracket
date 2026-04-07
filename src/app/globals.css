@@ -1451,6 +1451,11 @@ body {
     padding-right: 0.25rem;
   }
 
+  .mobile-bracket-wrapper {
+    --mb-submit-offset: calc(3.95rem + env(safe-area-inset-bottom, 0px));
+    --mb-nav-dock-height: 3.3rem;
+  }
+
   .mobile-step-title {
     font-size: 1.25rem;
   }
@@ -1770,6 +1775,8 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
   margin-bottom: 0.75rem;
 }
 
@@ -1778,23 +1785,36 @@ body {
 }
 
 .dashboard-bracket-status {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 600;
   color: var(--accent-green);
+  background: rgba(0, 214, 143, 0.1);
+  border: 1px solid rgba(0, 214, 143, 0.22);
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
 }
 
 .dashboard-bracket-picks {
   margin-bottom: 1rem;
 }
 
+.dashboard-picks-panel {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+  min-width: 0;
+}
+
 .dashboard-champ-section {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 10px;
-  margin-bottom: 0.5rem;
+  padding: 0.85rem 1rem;
+  background: transparent;
+  border-radius: 0;
+  margin-bottom: 0;
 }
 
 .dashboard-champ-icon {
@@ -1839,35 +1859,53 @@ body {
 }
 
 .dashboard-mvp-section {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
   align-items: center;
-  padding: 0.5rem 0.75rem;
+  padding: 0.7rem 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .dashboard-mvp-section {
+  background: rgba(0, 0, 0, 0.04);
+  border-top-color: var(--border);
 }
 
 .dashboard-mvp-label {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
 }
 
 .dashboard-mvp-name {
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--accent-gold);
+  text-align: right;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dashboard-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
   gap: 0.5rem;
 }
 
 .dashboard-action-btn {
-  flex: 1;
+  width: 100%;
   min-width: 0;
   text-align: center;
   text-decoration: none;
   font-size: 0.78rem !important;
-  padding: 0.55rem 0.5rem !important;
+  padding: 0.6rem 0.65rem !important;
+  box-sizing: border-box;
 }
 
 /* Empty bracket state */
@@ -1906,15 +1944,17 @@ body {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.65rem 0.75rem;
+  gap: 0.55rem;
+  padding: 0.7rem 0.85rem;
   background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
   border-radius: 10px;
 }
 
 .dashboard-stat-num {
-  font-size: 1.5rem;
+  font-size: 1.45rem;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
   background: var(--gradient-accent);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1926,7 +1966,8 @@ body {
 .dashboard-stat-txt {
   font-size: 0.72rem;
   color: var(--text-secondary);
-  line-height: 1.3;
+  line-height: 1.35;
+  min-width: 0;
 }
 
 .dashboard-stat-txt strong {
@@ -1936,7 +1977,8 @@ body {
 /* Upsets */
 .dashboard-upsets {
   border-top: 1px solid var(--border);
-  padding-top: 0.75rem;
+  padding-top: 0.85rem;
+  margin-top: 0.15rem;
 }
 
 .dashboard-upsets-title {
@@ -1945,50 +1987,55 @@ body {
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.65rem;
 }
 
 .dashboard-upsets-list {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.15rem;
 }
 
 .dashboard-upset-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(4.5rem, 6.5rem) 1fr 2.5rem;
   align-items: center;
-  gap: 0.6rem;
-  font-size: 0.78rem;
+  gap: 0.65rem;
+  font-size: 0.8125rem;
+  padding: 0.4rem 0;
 }
 
 .dashboard-upset-name {
   color: var(--text-primary);
-  font-weight: 500;
-  min-width: 80px;
-  flex-shrink: 0;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dashboard-upset-bar {
-  flex: 1;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 3px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
   overflow: hidden;
 }
 
 .dashboard-upset-fill {
   height: 100%;
-  background: var(--accent-red, #ef4444);
-  border-radius: 3px;
-  min-width: 4px;
+  background: linear-gradient(90deg, var(--accent-purple), var(--accent-orange));
+  border-radius: 999px;
+  min-width: 3px;
+  opacity: 0.9;
 }
 
 .dashboard-upset-pct {
-  color: var(--accent-red, #ef4444);
-  font-weight: 700;
-  font-size: 0.72rem;
-  min-width: 36px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
   text-align: right;
+  letter-spacing: -0.02em;
 }
 
 /* Mobile */
@@ -2014,20 +2061,75 @@ body {
     font-size: 1.4rem;
   }
 
+  .dashboard-card {
+    min-width: 0;
+    padding: 1rem 0.85rem;
+  }
+
+  .dashboard-bracket-header {
+    align-items: flex-start;
+  }
+
+  .dashboard-champ-section {
+    padding: 0.75rem 0.85rem;
+    gap: 0.65rem;
+  }
+
+  .dashboard-champ-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 1.05rem;
+  }
+
+  .dashboard-mvp-section {
+    padding: 0.65rem 0.85rem;
+    gap: 0.5rem;
+  }
+
   .dashboard-actions {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .dashboard-action-btn {
-    flex: none !important;
+    width: 100%;
   }
 
   .dashboard-stats-row {
     flex-direction: column;
   }
 
+  .dashboard-stat-pill {
+    min-width: 0;
+  }
+
   .dashboard-champ-name {
     font-size: 1rem;
+  }
+
+  /* Upsets: name + % on one row, bar full width below — avoids crushed bars */
+  .dashboard-upset-item {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    column-gap: 0.5rem;
+    row-gap: 0.35rem;
+    align-items: center;
+    padding: 0.45rem 0;
+  }
+
+  .dashboard-upset-name {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .dashboard-upset-pct {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+  }
+
+  .dashboard-upset-bar {
+    grid-column: 1 / -1;
+    grid-row: 2;
   }
 }
 
@@ -2406,6 +2508,20 @@ body {
   letter-spacing: 0.05em;
 }
 
+.mobile-wizard-nav-hint {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin: 0.65rem 0 0;
+  line-height: 1.35;
+  padding: 0 0.5rem;
+}
+
+.mobile-wizard-nav-hint strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
 .mobile-step-header {
   text-align: center;
   margin-bottom: 1.5rem;
@@ -2684,8 +2800,8 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  padding-top: 0.5rem;
-  padding-bottom: 4.5rem; /* Space for floating submit button */
+  padding-top: 0.25rem;
+  padding-bottom: 0;
 }
 
 .mobile-nav-btn-full {
@@ -2703,6 +2819,37 @@ body {
 @media (max-width: 1024px) {
   .desktop-bracket { display: none; }
   .mobile-bracket-wrapper { display: block; }
+
+  /* Pinned Back/Next above floating submit; body scrolls underneath */
+  .mobile-bracket-wrapper {
+    --mb-submit-offset: calc(4.35rem + env(safe-area-inset-bottom, 0px));
+    --mb-nav-dock-height: 3.45rem;
+  }
+
+  .mobile-bracket-has-nav-dock .mobile-bracket-body {
+    padding-bottom: calc(var(--mb-nav-dock-height) + var(--mb-submit-offset) + 0.65rem);
+  }
+
+  .mobile-nav-dock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: var(--mb-submit-offset);
+    z-index: 99;
+    background: var(--bg-dark);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -10px 36px rgba(0, 0, 0, 0.5);
+    padding: 0.45rem 0.75rem 0.5rem;
+    padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+  }
+
+  .mobile-nav-dock .mobile-nav-btns {
+    padding-top: 0;
+    max-width: 600px;
+    margin: 0 auto;
+    gap: 0.75rem;
+  }
 }
 
 /* ========== LOCKED BANNER ========== */

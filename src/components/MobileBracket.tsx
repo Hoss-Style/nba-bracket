@@ -311,148 +311,160 @@ export default function MobileBracket({
     );
   };
 
+  const showNavHint =
+    !isLastStep && step.type === "matchups" && step.matchups.length >= 2;
+
   return (
-    <div className="mobile-bracket">
-      {/* Progress bar */}
-      <div className="mobile-progress">
-        <div className="mobile-progress-bar">
-          <div
-            className="mobile-progress-fill"
-            style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
-          />
-        </div>
-        <span className="mobile-progress-text">
-          Step {currentStep + 1} of {steps.length}
-        </span>
-      </div>
-
-      {/* Back button at top — only on last step (MVP) */}
-      {isLastStep && !isFirstStep && (
-        <button
-          onClick={handlePrev}
-          className="btn btn-secondary mobile-back-top"
-        >
-          &larr; Back
-        </button>
-      )}
-
-      {/* Step header */}
-      <div className="mobile-step-header">
-        <h2 className="mobile-step-title">{step.title}</h2>
-        <p className="mobile-step-subtitle">{step.subtitle}</p>
-      </div>
-
-      {/* Step content */}
-      <div key={currentStep} className={`mobile-step-content mobile-step-enter-${animDirection}`}>
-        {step.type === "matchups" ? (
-          step.matchups.map((m) => {
-            const pick = picks[m.key] as MatchupPick | null;
-            const isTopSelected = pick?.winner === m.topTeam?.abbreviation;
-            const isBottomSelected = pick?.winner === m.bottomTeam?.abbreviation;
-
-            return (
-              <div key={m.key} className="mobile-matchup">
-                <div className="mobile-matchup-label">{m.label}</div>
-                <div className="mobile-matchup-teams">
-                  {renderTeamButton(m.topTeam, m.key, isTopSelected)}
-                  <span className="mobile-vs">VS</span>
-                  {renderTeamButton(m.bottomTeam, m.key, isBottomSelected)}
-                </div>
-                {renderGamesSelector(m.key)}
-              </div>
-            );
-          })
-        ) : (
-          // MVP step
-          <div className="mobile-mvp">
-            <div className="mobile-mvp-trophy">&#127942;</div>
-            {finalsMVP ? (
-              <div className="mobile-mvp-card">
-                <div className="mobile-mvp-card-label">Your Finals MVP</div>
-                <div className="mobile-mvp-player">
-                  <span>{finalsMVP}</span>
-                  {mvpCorrect !== null && mvpCorrect !== undefined && (
-                    <span className={`matchup-result-icon ${mvpCorrect ? "matchup-result-correct" : "matchup-result-incorrect"}`}>
-                      {mvpCorrect ? "\u2713" : "\u2717"}
-                    </span>
-                  )}
-                  {!disabled && (
-                    <button
-                      className="mobile-mvp-player-clear"
-                      onClick={() => { onFinalsMVPChange(""); setMvpQuery(""); }}
-                    >
-                      &times;
-                    </button>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="mobile-mvp-search" ref={mvpRef}>
-                <span className="mobile-mvp-search-icon">&#128269;</span>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Search player..."
-                  value={mvpQuery}
-                  onChange={(e) => {
-                    setMvpQuery(e.target.value);
-                    setMvpOpen(true);
-                  }}
-                  onFocus={() => mvpQuery.length > 0 && setMvpOpen(true)}
-                />
-                {mvpOpen && mvpQuery.length > 0 && (() => {
-                  const finalsTeams = [
-                    picks.finals?.winner,
-                    finals_west?.abbreviation === picks.finals?.winner
-                      ? finals_east?.abbreviation
-                      : finals_west?.abbreviation,
-                  ].filter(Boolean) as string[];
-                  const results = searchPlayers(mvpQuery, finalsTeams);
-                  if (results.length === 0) return null;
-                  return (
-                    <div className="mvp-dropdown">
-                      {results.map((player) => (
-                        <button
-                          key={player}
-                          className="mvp-dropdown-item"
-                          onClick={() => {
-                            onFinalsMVPChange(player);
-                            setMvpQuery(player);
-                            setMvpOpen(false);
-                          }}
-                        >
-                          {player}
-                        </button>
-                      ))}
-                    </div>
-                  );
-                })()}
-                <div className="mobile-mvp-hint">Pick from either Finals team</div>
-              </div>
-            )}
+    <div className={`mobile-bracket ${!isLastStep ? "mobile-bracket-has-nav-dock" : ""}`}>
+      <div className="mobile-bracket-body">
+        {/* Progress bar */}
+        <div className="mobile-progress">
+          <div className="mobile-progress-bar">
+            <div
+              className="mobile-progress-fill"
+              style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+            />
           </div>
-        )}
-      </div>
+          <span className="mobile-progress-text">
+            Step {currentStep + 1} of {steps.length}
+          </span>
+          {showNavHint && (
+            <p className="mobile-wizard-nav-hint">
+              After this round, tap <strong>Next</strong> below to continue.
+            </p>
+          )}
+        </div>
 
-      {/* Navigation */}
-      {!isLastStep && (
-        <div className="mobile-nav-btns">
+        {/* Back button at top — only on last step (MVP) */}
+        {isLastStep && !isFirstStep && (
           <button
             onClick={handlePrev}
-            disabled={isFirstStep}
-            className="btn btn-secondary mobile-nav-btn"
-            style={{ opacity: isFirstStep ? 0.3 : 1 }}
+            className="btn btn-secondary mobile-back-top"
           >
             &larr; Back
           </button>
-          <button
-            onClick={handleNext}
-            disabled={!canAdvance()}
-            className={`btn mobile-nav-btn ${canAdvance() ? "btn-primary" : "btn-secondary"}`}
-            style={{ opacity: canAdvance() ? 1 : 0.4 }}
-          >
-            Next &rarr;
-          </button>
+        )}
+
+        {/* Step header */}
+        <div className="mobile-step-header">
+          <h2 className="mobile-step-title">{step.title}</h2>
+          <p className="mobile-step-subtitle">{step.subtitle}</p>
+        </div>
+
+        {/* Step content */}
+        <div key={currentStep} className={`mobile-step-content mobile-step-enter-${animDirection}`}>
+          {step.type === "matchups" ? (
+            step.matchups.map((m) => {
+              const pick = picks[m.key] as MatchupPick | null;
+              const isTopSelected = pick?.winner === m.topTeam?.abbreviation;
+              const isBottomSelected = pick?.winner === m.bottomTeam?.abbreviation;
+
+              return (
+                <div key={m.key} className="mobile-matchup">
+                  <div className="mobile-matchup-label">{m.label}</div>
+                  <div className="mobile-matchup-teams">
+                    {renderTeamButton(m.topTeam, m.key, isTopSelected)}
+                    <span className="mobile-vs">VS</span>
+                    {renderTeamButton(m.bottomTeam, m.key, isBottomSelected)}
+                  </div>
+                  {renderGamesSelector(m.key)}
+                </div>
+              );
+            })
+          ) : (
+            // MVP step
+            <div className="mobile-mvp">
+              <div className="mobile-mvp-trophy">&#127942;</div>
+              {finalsMVP ? (
+                <div className="mobile-mvp-card">
+                  <div className="mobile-mvp-card-label">Your Finals MVP</div>
+                  <div className="mobile-mvp-player">
+                    <span>{finalsMVP}</span>
+                    {mvpCorrect !== null && mvpCorrect !== undefined && (
+                      <span className={`matchup-result-icon ${mvpCorrect ? "matchup-result-correct" : "matchup-result-incorrect"}`}>
+                        {mvpCorrect ? "\u2713" : "\u2717"}
+                      </span>
+                    )}
+                    {!disabled && (
+                      <button
+                        className="mobile-mvp-player-clear"
+                        onClick={() => { onFinalsMVPChange(""); setMvpQuery(""); }}
+                      >
+                        &times;
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="mobile-mvp-search" ref={mvpRef}>
+                  <span className="mobile-mvp-search-icon">&#128269;</span>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Search player..."
+                    value={mvpQuery}
+                    onChange={(e) => {
+                      setMvpQuery(e.target.value);
+                      setMvpOpen(true);
+                    }}
+                    onFocus={() => mvpQuery.length > 0 && setMvpOpen(true)}
+                  />
+                  {mvpOpen && mvpQuery.length > 0 && (() => {
+                    const finalsTeams = [
+                      picks.finals?.winner,
+                      finals_west?.abbreviation === picks.finals?.winner
+                        ? finals_east?.abbreviation
+                        : finals_west?.abbreviation,
+                    ].filter(Boolean) as string[];
+                    const results = searchPlayers(mvpQuery, finalsTeams);
+                    if (results.length === 0) return null;
+                    return (
+                      <div className="mvp-dropdown">
+                        {results.map((player) => (
+                          <button
+                            key={player}
+                            className="mvp-dropdown-item"
+                            onClick={() => {
+                              onFinalsMVPChange(player);
+                              setMvpQuery(player);
+                              setMvpOpen(false);
+                            }}
+                          >
+                            {player}
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                  <div className="mobile-mvp-hint">Pick from either Finals team</div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Navigation — fixed above submit strip on narrow viewports (see globals.css) */}
+      {!isLastStep && (
+        <div className="mobile-nav-dock" aria-label="Bracket step navigation">
+          <div className="mobile-nav-btns">
+            <button
+              onClick={handlePrev}
+              disabled={isFirstStep}
+              className="btn btn-secondary mobile-nav-btn"
+              style={{ opacity: isFirstStep ? 0.3 : 1 }}
+            >
+              &larr; Back
+            </button>
+            <button
+              onClick={handleNext}
+              disabled={!canAdvance()}
+              className={`btn mobile-nav-btn ${canAdvance() ? "btn-primary" : "btn-secondary"}`}
+              style={{ opacity: canAdvance() ? 1 : 0.4 }}
+            >
+              Next &rarr;
+            </button>
+          </div>
         </div>
       )}
     </div>

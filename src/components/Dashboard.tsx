@@ -149,32 +149,34 @@ export default function Dashboard({ user }: DashboardProps) {
             <div className="dashboard-bracket-status">&#9989; Submitted</div>
           </div>
           <div className="dashboard-bracket-picks">
-            <div className="dashboard-champ-section">
-              {champion ? (
-                <>
-                  <div
-                    className="dashboard-champ-icon"
-                    style={{ background: `${champion.primaryColor}25`, borderColor: `${champion.primaryColor}50` }}
-                  >
-                    &#127942;
-                  </div>
-                  <div className="dashboard-champ-info">
-                    <span className="dashboard-champ-label">Champion</span>
-                    <span className="dashboard-champ-name" style={{ color: champion.primaryColor }}>
-                      {champion.name}
+            <div className="dashboard-picks-panel">
+              <div className="dashboard-champ-section">
+                {champion ? (
+                  <>
+                    <div
+                      className="dashboard-champ-icon"
+                      style={{ background: `${champion.primaryColor}25`, borderColor: `${champion.primaryColor}50` }}
+                    >
+                      &#127942;
+                    </div>
+                    <div className="dashboard-champ-info">
+                      <span className="dashboard-champ-label">Champion</span>
+                      <span className="dashboard-champ-name" style={{ color: champion.primaryColor }}>
+                        {champion.name}
+                      </span>
+                    </div>
+                    <span className="dashboard-champ-seed" style={{ background: `${champion.primaryColor}20`, color: champion.primaryColor, border: `1px solid ${champion.primaryColor}40` }}>
+                      #{champion.seed} seed
                     </span>
-                  </div>
-                  <span className="dashboard-champ-seed" style={{ background: `${champion.primaryColor}20`, color: champion.primaryColor, border: `1px solid ${champion.primaryColor}40` }}>
-                    #{champion.seed} seed
-                  </span>
-                </>
-              ) : (
-                <span style={{ color: "var(--text-muted)" }}>No champion picked</span>
-              )}
-            </div>
-            <div className="dashboard-mvp-section">
-              <span className="dashboard-mvp-label">Finals MVP</span>
-              <span className="dashboard-mvp-name">{mvp || "--"}</span>
+                  </>
+                ) : (
+                  <span style={{ color: "var(--text-muted)" }}>No champion picked</span>
+                )}
+              </div>
+              <div className="dashboard-mvp-section">
+                <span className="dashboard-mvp-label">Finals MVP</span>
+                <span className="dashboard-mvp-name" title={mvp || undefined}>{mvp || "—"}</span>
+              </div>
             </div>
           </div>
           <div className="dashboard-actions">

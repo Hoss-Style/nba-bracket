@@ -302,7 +302,9 @@ export default function BracketPage() {
                 ? "Saving..."
                 : allComplete
                 ? "Submit Bracket ✓"
-                : `Complete All Picks First (${completedCount}/${totalPicks})`}
+                : onMvpStep
+                ? `Complete All Picks First (${completedCount}/${totalPicks})`
+                : `Complete All Picks First (${completedCount}/${totalPicks}) · Tap Next above`}
             </button>
           </div>
 
