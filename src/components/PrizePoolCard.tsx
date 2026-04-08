@@ -18,8 +18,8 @@ function formatMoney(n: number): string {
 export default function PrizePoolCard() {
   const [bracketCount, setBracketCount] = useState<number | null>(null);
   const entryFee = getEntryFeeDollars();
-  const estimatedPool =
-    bracketCount !== null && entryFee > 0 ? Math.round(bracketCount * entryFee * 100) / 100 : null;
+  const showMoney = bracketCount !== null && entryFee > 0;
+  const estimatedPool = showMoney ? Math.round(bracketCount * entryFee * 100) / 100 : null;
 
   const load = useCallback(async () => {
     try {
@@ -55,21 +55,20 @@ export default function PrizePoolCard() {
         </span>
       </div>
 
-      {estimatedPool !== null && estimatedPool > 0 && (
+      {showMoney && (
         <p className="prize-pool-estimate">
           Est. pool ({bracketCount} × {formatMoney(entryFee)}):{" "}
-          <strong>{formatMoney(estimatedPool)}</strong>
+          <strong>{formatMoney(estimatedPool ?? 0)}</strong>
         </p>
       )}
 
       <ul
-        className={`prize-pool-splits${estimatedPool !== null && estimatedPool > 0 ? " prize-pool-splits-has-amt" : ""}`}
+        className={`prize-pool-splits${showMoney ? " prize-pool-splits-has-amt" : ""}`}
       >
         {PAYOUT_SPLITS.map(({ place, pct }) => {
-          const share =
-            estimatedPool !== null && estimatedPool > 0
-              ? Math.round(estimatedPool * (pct / 100) * 100) / 100
-              : null;
+          const share = showMoney
+            ? Math.round((estimatedPool ?? 0) * (pct / 100) * 100) / 100
+            : null;
           return (
             <li key={place} className="prize-pool-split-row">
               <span className="prize-pool-place">{place}</span>
