@@ -6,6 +6,7 @@ import { getEntryByEmail, getAllEntries } from "@/lib/supabase";
 import { getTimeUntilDeadline, isBeforeDeadline } from "@/lib/deadline";
 import { getTeamByAbbr } from "@/lib/teams";
 import { SkeletonCard } from "@/components/Skeleton";
+import CommunityFeed from "@/components/CommunityFeed";
 
 interface DashboardProps {
   user: BracketUser;
@@ -202,6 +203,13 @@ export default function Dashboard({ user }: DashboardProps) {
               Make Your Picks &rarr;
             </a>
           )}
+        </div>
+      )}
+
+      {/* Inline Group Chat */}
+      {!loading && (
+        <div className="dashboard-chat-inline">
+          <CommunityFeed userName={user.name} />
         </div>
       )}
 

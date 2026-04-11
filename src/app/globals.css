@@ -1976,6 +1976,24 @@ body {
   box-sizing: border-box;
 }
 
+/* Inline chat on dashboard */
+.dashboard-chat-inline {
+  margin-top: 0.75rem;
+}
+.dashboard-chat-inline .community-feed-header {
+  display: none;
+}
+.dashboard-chat-inline .community-feed {
+  margin: 0;
+  padding: 0;
+}
+.dashboard-chat-inline .community-feed-card {
+  border-radius: 0.75rem;
+}
+.dashboard-chat-inline .community-feed-list {
+  max-height: min(35vh, 300px);
+}
+
 /* Empty bracket state */
 .dashboard-empty-card {
   text-align: center;
