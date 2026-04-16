@@ -7,7 +7,7 @@ import Bracket from "@/components/Bracket";
 import MobileBracket from "@/components/MobileBracket";
 import { BracketPicks, BracketUser, Entry } from "@/lib/types";
 import { createEmptyPicks, isPicksComplete, countCompletedPicks, totalPickableSlots } from "@/lib/emptyPicks";
-import { getEntryByEmail, updateEntry } from "@/lib/supabase";
+import { getEntryByEmail, updateEntry, submitEntry } from "@/lib/supabase";
 import { isBeforeDeadline } from "@/lib/deadline";
 import { getMatchupStatuses, getEliminatedTeams } from "@/lib/scoring";
 import { getActualResults } from "@/lib/supabase";
@@ -104,37 +104,21 @@ export default function BracketPage() {
     setToast({ show: false, message: "", type: "success" });
 
     try {
-      const existing = await getEntryByEmail(user.email);
+      let existing = await getEntryByEmail(user.email);
+      if (!existing) {
+        existing = await submitEntry({ name: user.name, email: user.email, phone: user.phone || "", pin: "", picks: picksWithMVP, submittedAt: new Date().toISOString() });
+      } else {
+        const success = await updateEntry({ ...existing, picks: picksWithMVP, submittedAt: new Date().toISOString() });
+        if (!success) { setToast({ show: true, message: "Failed to save. Try again.", type: "error" }); setSubmitting(false); return; }
+      }
       if (existing) {
-        const success = await updateEntry({
-          ...existing,
-          picks: picksWithMVP,
-          submittedAt: new Date().toISOString(),
-        });
-        if (success) {
-          setExistingEntry({ ...existing, picks: picksWithMVP });
-          setEditing(false);
-          confetti({
-            particleCount: 150,
-            spread: 80,
-            origin: { y: 0.6 },
-            colors: ["#7b2d8e", "#e56020", "#ff8844", "#ffffff"],
-          });
-          setTimeout(() => confetti({
-            particleCount: 80,
-            spread: 100,
-            origin: { x: 0.2, y: 0.5 },
-            colors: ["#7b2d8e", "#e56020", "#ff8844"],
-          }), 300);
-          setTimeout(() => confetti({
-            particleCount: 80,
-            spread: 100,
-            origin: { x: 0.8, y: 0.5 },
-            colors: ["#7b2d8e", "#e56020", "#ff8844"],
-          }), 600);
-        } else {
-          setToast({ show: true, message: "Failed to save. Try again.", type: "error" });
-        }
+        setExistingEntry({ ...existing, picks: picksWithMVP });
+        setEditing(false);
+        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ["#7b2d8e", "#e56020", "#ff8844", "#ffffff"] });
+        setTimeout(() => confetti({ particleCount: 80, spread: 100, origin: { x: 0.2, y: 0.5 }, colors: ["#7b2d8e", "#e56020", "#ff8844"] }), 300);
+        setTimeout(() => confetti({ particleCount: 80, spread: 100, origin: { x: 0.8, y: 0.5 }, colors: ["#7b2d8e", "#e56020", "#ff8844"] }), 600);
+      } else {
+        setToast({ show: true, message: "Failed to save. Try again.", type: "error" });
       }
     } catch {
       setToast({ show: true, message: "Failed to save. Try again.", type: "error" });
@@ -152,13 +136,17 @@ export default function BracketPage() {
     setSubmitting(true);
     setToast({ show: false, message: "", type: "success" });
     try {
-      const existing = await getEntryByEmail(user.email);
-      if (existing) {
-        const success = await updateEntry({
-          ...existing,
-          picks: picksWithMVP,
-          submittedAt: new Date().toISOString(),
-        });
+      let existing = await getEntryByEmail(user.email);
+      if (!existing) {
+        existing = await submitEntry({ name: user.name, email: user.email, phone: user.phone || "", pin: "", picks: picksWithMVP, submittedAt: new Date().toISOString() });
+        if (existing) {
+          setExistingEntry({ ...existing, picks: picksWithMVP });
+          setToast({ show: true, message: "Bracket saved! Come back to finish.", type: "success" });
+        } else {
+          setToast({ show: true, message: "Failed to save. Try again.", type: "error" });
+        }
+      } else {
+        const success = await updateEntry({ ...existing, picks: picksWithMVP, submittedAt: new Date().toISOString() });
         if (success) {
           setExistingEntry({ ...existing, picks: picksWithMVP });
           setToast({ show: true, message: "Bracket saved! Come back to finish.", type: "success" });
@@ -325,8 +313,8 @@ export default function BracketPage() {
             <button
               onClick={allComplete ? handleSubmit : handleSave}
               disabled={completedCount === 0 || submitting}
-              className={`btn submit-btn ${allComplete ? "btn-accent" : "btn-secondary"} ${allComplete && onMvpStep ? "submit-btn-pulse" : ""}`}
-              style={{ opacity: completedCount > 0 ? 1 : 0.5, width: "100%" }}
+              className={`btn submit-btn ${allComplete ? "btn-accent" : completedCount > 0 ? "btn-save" : "btn-secondary"} ${allComplete && onMvpStep ? "submit-btn-pulse" : ""}`}
+              style={{ width: "100%" }}
             >
               {submitting
                 ? "Saving..."
