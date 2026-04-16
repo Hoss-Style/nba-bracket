@@ -1777,6 +1777,8 @@ body {
   margin-bottom: 1.5rem;
 }
 .dashboard-hero-logo {
+  display: flex;
+  justify-content: center;
   margin-bottom: 0.5rem;
 }
 
