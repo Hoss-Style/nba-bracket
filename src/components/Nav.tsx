@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { isBeforeDeadline, getTimeUntilDeadline } from "@/lib/deadline";
@@ -54,6 +55,7 @@ export default function Nav() {
     <>
       <nav className="nav">
         <Link href="/" className="nav-brand">
+          <Image src="/logo.png" alt="" width={32} height={32} className="nav-brand-logo" />
           <span className="nav-brand-full">NBA Bracket Challenge</span>
           <span className="nav-brand-short">NBA Bracket</span>
         </Link>

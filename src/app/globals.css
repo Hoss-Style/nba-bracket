@@ -476,15 +476,27 @@ body {
 }
 
 .nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-weight: 800;
   font-size: 1.1rem;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.nav-brand-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.nav-brand-full,
+.nav-brand-short {
   background: var(--gradient-accent);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-decoration: none;
-  white-space: nowrap;
-  flex-shrink: 0;
 }
 
 /* Responsive nav text */
@@ -1757,26 +1769,6 @@ body {
   max-width: 600px;
   margin: 0 auto;
   padding: 1.5rem 1rem 3rem;
-  position: relative;
-  overflow: hidden;
-}
-.dashboard::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background-image: url("/logo.png");
-  background-repeat: repeat;
-  background-size: 80px 80px;
-  opacity: 0.06;
-  pointer-events: none;
-}
-[data-theme="light"] .dashboard::before {
-  opacity: 0.08;
-}
-.dashboard > * {
-  position: relative;
-  z-index: 1;
 }
 
 /* Hero: Welcome + Countdown */
