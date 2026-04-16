@@ -143,6 +143,36 @@ export default function BracketPage() {
     }
   };
 
+  const handleSave = async () => {
+    if (!user) return;
+    if (locked) {
+      setToast({ show: true, message: "Submissions are locked. The playoffs have begun!", type: "error" });
+      return;
+    }
+    setSubmitting(true);
+    setToast({ show: false, message: "", type: "success" });
+    try {
+      const existing = await getEntryByEmail(user.email);
+      if (existing) {
+        const success = await updateEntry({
+          ...existing,
+          picks: picksWithMVP,
+          submittedAt: new Date().toISOString(),
+        });
+        if (success) {
+          setExistingEntry({ ...existing, picks: picksWithMVP });
+          setToast({ show: true, message: "Bracket saved! Come back to finish.", type: "success" });
+        } else {
+          setToast({ show: true, message: "Failed to save. Try again.", type: "error" });
+        }
+      }
+    } catch {
+      setToast({ show: true, message: "Failed to save. Try again.", type: "error" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleShare = async () => {
     const entryId = existingEntry?.id || "";
     const url = `${window.location.origin}/bracket/${entryId}`;
@@ -290,21 +320,21 @@ export default function BracketPage() {
             />
           </div>
 
-          {/* Floating Submit Button */}
+          {/* Floating Submit / Save Button */}
           <div className="floating-submit">
             <button
-              onClick={handleSubmit}
-              disabled={!allComplete || submitting}
+              onClick={allComplete ? handleSubmit : handleSave}
+              disabled={completedCount === 0 || submitting}
               className={`btn submit-btn ${allComplete ? "btn-accent" : "btn-secondary"} ${allComplete && onMvpStep ? "submit-btn-pulse" : ""}`}
-              style={{ opacity: allComplete ? 1 : 0.6, width: "100%" }}
+              style={{ opacity: completedCount > 0 ? 1 : 0.5, width: "100%" }}
             >
               {submitting
                 ? "Saving..."
                 : allComplete
                 ? "Submit Bracket ✓"
-                : onMvpStep
-                ? `Complete All Picks First (${completedCount}/${totalPicks})`
-                : `Complete All Picks First (${completedCount}/${totalPicks}) · Tap Next above`}
+                : completedCount > 0
+                ? `Save Bracket (${completedCount}/${totalPicks})`
+                : "Make Your Picks First"}
             </button>
           </div>
 
