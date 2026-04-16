@@ -1758,19 +1758,21 @@ body {
   margin: 0 auto;
   padding: 1.5rem 1rem 3rem;
   position: relative;
+  overflow: hidden;
 }
 .dashboard::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: url("/logo.png") repeat;
+  background-image: url("/logo.png");
+  background-repeat: repeat;
   background-size: 80px 80px;
-  opacity: 0.03;
+  opacity: 0.06;
   pointer-events: none;
 }
 [data-theme="light"] .dashboard::before {
-  opacity: 0.05;
+  opacity: 0.08;
 }
 .dashboard > * {
   position: relative;
