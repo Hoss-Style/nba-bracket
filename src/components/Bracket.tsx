@@ -41,7 +41,7 @@ export default function Bracket({ picks, onPicksChange, disabled, finalsMVP, onF
     return () => document.removeEventListener("mousedown", handler);
   }, []);
   const updatePick = useCallback(
-    (key: keyof BracketPicks, pick: MatchupPick) => {
+    (key: keyof BracketPicks, pick: MatchupPick | null) => {
       const newPicks = { ...picks, [key]: pick };
 
       // When a round 1 pick changes, clear dependent later-round picks
@@ -85,7 +85,7 @@ export default function Bracket({ picks, onPicksChange, disabled, finalsMVP, onF
       clearDependents(key);
 
       // Clear Finals MVP if finals was cleared or winner changed
-      if (newPicks.finals === null || (key === "finals" && pick.winner !== picks.finals?.winner)) {
+      if (newPicks.finals === null || (key === "finals" && pick?.winner !== picks.finals?.winner)) {
         onFinalsMVPChange("");
         setMvpQuery("");
       }

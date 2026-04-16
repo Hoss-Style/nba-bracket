@@ -6,7 +6,7 @@ interface MatchupCardProps {
   topTeam: Team | null;
   bottomTeam: Team | null;
   pick: MatchupPick | null;
-  onPick: (pick: MatchupPick) => void;
+  onPick: (pick: MatchupPick | null) => void;
   disabled?: boolean;
   compact?: boolean;
   resultStatus?: { winnerCorrect: boolean; gamesCorrect: boolean };
@@ -18,7 +18,10 @@ const GAME_OPTIONS = [4, 5, 6, 7];
 export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disabled, compact, resultStatus, eliminatedTeams }: MatchupCardProps) {
   const handleTeamClick = (team: Team) => {
     if (disabled || team.tbd) return;
-    if (pick?.winner === team.abbreviation) return; // already selected
+    if (pick?.winner === team.abbreviation) {
+      onPick(null); // deselect
+      return;
+    }
     onPick({ winner: team.abbreviation, games: pick?.games || 6 });
   };
 
