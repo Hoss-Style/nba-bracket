@@ -56,9 +56,10 @@ export function isPicksComplete(picks: BracketPicks): boolean {
   if (picks.westCF === null && !westR1_1Tbd) return false;
   if (picks.eastCF === null && !eastR1_1Tbd) return false;
 
-  // Finals & MVP: only skippable if BOTH conferences have TBD
-  if (picks.finals === null && !westR1_1Tbd && !eastR1_1Tbd) return false;
-  if (picks.finalsMVP.trim() === "" && !westR1_1Tbd && !eastR1_1Tbd) return false;
+  // Finals & MVP: skippable only if user hasn't been able to pick both conf champs
+  const canPickFinals = picks.westCF !== null && picks.eastCF !== null;
+  if (picks.finals === null && canPickFinals) return false;
+  if (picks.finalsMVP.trim() === "" && (canPickFinals || picks.finals !== null)) return false;
 
   return true;
 }
