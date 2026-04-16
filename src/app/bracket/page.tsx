@@ -60,6 +60,12 @@ export default function BracketPage() {
           setFinalsMVP(entry.picks.finalsMVP || "");
           setExistingEntry(entry);
 
+          // Auto-enter edit mode if coming from dashboard "Edit Picks"
+          if (sessionStorage.getItem("bracket_edit_mode") === "true") {
+            setEditing(true);
+            sessionStorage.removeItem("bracket_edit_mode");
+          }
+
           // Load actual results for status display
           const actualResults = await getActualResults();
           if (actualResults) {
