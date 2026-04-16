@@ -1775,6 +1775,32 @@ body {
 .dashboard-hero {
   text-align: center;
   margin-bottom: 1.5rem;
+  position: relative;
+  overflow: visible;
+  padding-top: 2rem;
+  padding-bottom: 1rem;
+}
+.dashboard-hero::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 320px;
+  height: 320px;
+  transform: translate(-50%, -55%);
+  background: url("/logo.png") no-repeat center/contain;
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 0;
+  mask-image: radial-gradient(ellipse 55% 55% at center, black 0%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 55% 55% at center, black 0%, transparent 100%);
+}
+[data-theme="light"] .dashboard-hero::before {
+  opacity: 0.15;
+}
+.dashboard-hero > * {
+  position: relative;
+  z-index: 1;
 }
 
 .dashboard-fee-reminder {
