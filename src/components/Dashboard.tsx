@@ -6,6 +6,7 @@ import { getEntryByEmail, getAllEntries } from "@/lib/supabase";
 import { getTimeUntilDeadline, isBeforeDeadline } from "@/lib/deadline";
 import { getTeamByAbbr } from "@/lib/teams";
 import { getEntryFeeDollars } from "@/lib/prizePool";
+import Image from "next/image";
 import { SkeletonCard } from "@/components/Skeleton";
 import CommunityFeed from "@/components/CommunityFeed";
 
@@ -127,6 +128,10 @@ export default function Dashboard({ user }: DashboardProps) {
     <div className="dashboard">
       {/* Hero: Welcome + Countdown */}
       <div className="dashboard-hero">
+        <div className="dashboard-hero-logo">
+          <Image src="/logo.png" alt="Lew's Bracket Challenge" width={400} height={240} priority style={{ width: "100%", maxWidth: "280px", height: "auto" }} />
+        </div>
+
         <h1 className="dashboard-welcome">
           Hey, {user.name} <span className="dashboard-wave">&#128075;</span>
         </h1>
