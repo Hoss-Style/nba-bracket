@@ -260,51 +260,61 @@ export default function Dashboard({ user }: DashboardProps) {
                   <span className="dashboard-stat-num">{stats.totalEntries}</span>
                   <span className="dashboard-stat-txt">entries</span>
                 </div>
-                {stats.topChampion && (
-                  <div className="dashboard-stat-pill">
-                    <span className="dashboard-stat-num" style={{ color: stats.topChampion.color }}>{stats.topChampion.pct}%</span>
-                    <span className="dashboard-stat-txt">pick <strong>{stats.topChampion.name}</strong> champ</span>
-                  </div>
-                )}
               </div>
-              <div className="dashboard-stats-row">
-                {stats.topWestChamp && (
-                  <div className="dashboard-stat-pill">
-                    <span className="dashboard-stat-num" style={{ color: stats.topWestChamp.color }}>{stats.topWestChamp.pct}%</span>
-                    <span className="dashboard-stat-txt">pick <strong>{stats.topWestChamp.name}</strong> West</span>
-                  </div>
-                )}
-                {stats.topEastChamp && (
-                  <div className="dashboard-stat-pill">
-                    <span className="dashboard-stat-num" style={{ color: stats.topEastChamp.color }}>{stats.topEastChamp.pct}%</span>
-                    <span className="dashboard-stat-txt">pick <strong>{stats.topEastChamp.name}</strong> East</span>
-                  </div>
-                )}
-              </div>
-              {stats.topMVP && (
+              {beforeDeadline && (
+                <div className="dashboard-stats-locked">
+                  <span className="dashboard-stats-locked-icon">&#128274;</span>
+                  Pick stats revealed when brackets lock
+                </div>
+              )}
+              <div className={beforeDeadline ? "picks-blurred" : ""}>
                 <div className="dashboard-stats-row">
-                  <div className="dashboard-stat-pill">
-                    <span className="dashboard-stat-num">{stats.topMVP.pct}%</span>
-                    <span className="dashboard-stat-txt">pick <strong>{stats.topMVP.name}</strong> MVP</span>
-                  </div>
+                  {stats.topChampion && (
+                    <div className="dashboard-stat-pill">
+                      <span className="dashboard-stat-num" style={{ color: stats.topChampion.color }}>{stats.topChampion.pct}%</span>
+                      <span className="dashboard-stat-txt">pick <strong>{stats.topChampion.name}</strong> champ</span>
+                    </div>
+                  )}
                 </div>
-              )}
-              {stats.topUpsets.length > 0 && (
-                <div className="dashboard-upsets">
-                  <div className="dashboard-upsets-title">Popular Upsets</div>
-                  <div className="dashboard-upsets-list">
-                    {stats.topUpsets.map((u) => (
-                      <div key={u.abbr} className="dashboard-upset-item">
-                        <span className="dashboard-upset-name">{u.name}</span>
-                        <div className="dashboard-upset-bar">
-                          <div className="dashboard-upset-fill" style={{ width: `${u.pct}%` }} />
+                <div className="dashboard-stats-row">
+                  {stats.topWestChamp && (
+                    <div className="dashboard-stat-pill">
+                      <span className="dashboard-stat-num" style={{ color: stats.topWestChamp.color }}>{stats.topWestChamp.pct}%</span>
+                      <span className="dashboard-stat-txt">pick <strong>{stats.topWestChamp.name}</strong> West</span>
+                    </div>
+                  )}
+                  {stats.topEastChamp && (
+                    <div className="dashboard-stat-pill">
+                      <span className="dashboard-stat-num" style={{ color: stats.topEastChamp.color }}>{stats.topEastChamp.pct}%</span>
+                      <span className="dashboard-stat-txt">pick <strong>{stats.topEastChamp.name}</strong> East</span>
+                    </div>
+                  )}
+                </div>
+                {stats.topMVP && (
+                  <div className="dashboard-stats-row">
+                    <div className="dashboard-stat-pill">
+                      <span className="dashboard-stat-num">{stats.topMVP.pct}%</span>
+                      <span className="dashboard-stat-txt">pick <strong>{stats.topMVP.name}</strong> MVP</span>
+                    </div>
+                  </div>
+                )}
+                {stats.topUpsets.length > 0 && (
+                  <div className="dashboard-upsets">
+                    <div className="dashboard-upsets-title">Popular Upsets</div>
+                    <div className="dashboard-upsets-list">
+                      {stats.topUpsets.map((u) => (
+                        <div key={u.abbr} className="dashboard-upset-item">
+                          <span className="dashboard-upset-name">{u.name}</span>
+                          <div className="dashboard-upset-bar">
+                            <div className="dashboard-upset-fill" style={{ width: `${u.pct}%` }} />
+                          </div>
+                          <span className="dashboard-upset-pct">{u.pct}%</span>
                         </div>
-                        <span className="dashboard-upset-pct">{u.pct}%</span>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </>
           )}
         </div>

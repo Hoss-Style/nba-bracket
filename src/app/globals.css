@@ -2149,6 +2149,16 @@ body {
 }
 
 /* Upsets */
+.dashboard-stats-locked {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  padding: 0.4rem 0;
+}
+.dashboard-stats-locked-icon {
+  margin-right: 0.3rem;
+}
+
 .dashboard-upsets {
   border-top: 1px solid var(--border);
   padding-top: 0.85rem;
