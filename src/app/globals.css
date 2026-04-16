@@ -828,6 +828,19 @@ body {
   font-style: italic;
   font-size: 0.75rem;
 }
+.matchup-team-tbd {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+  background: rgba(100, 100, 100, 0.08) !important;
+}
+.matchup-team-tbd .matchup-name {
+  font-style: italic;
+  color: var(--text-muted);
+}
+.matchup-team-tbd .matchup-seed {
+  background: rgba(100, 100, 100, 0.2) !important;
+  color: var(--text-muted) !important;
+}
 
 .games-selector {
   display: flex;
@@ -1138,6 +1151,16 @@ body {
 .scoreboard-table th:last-child,
 .scoreboard-table td:last-child {
   text-align: right;
+}
+
+/* Conference champ columns — full/abbr toggle */
+.scoreboard-abbr { display: none; }
+.scoreboard-full { display: inline; }
+.scoreboard-conf-cell {
+  font-size: 0.85rem;
+}
+.scoreboard-conf-th {
+  white-space: nowrap;
 }
 
 .scoreboard-row {
@@ -1470,6 +1493,13 @@ body {
     white-space: nowrap;
   }
 
+  .scoreboard-abbr { display: inline; }
+  .scoreboard-full { display: none; }
+  .scoreboard-conf-cell {
+    font-size: 0.65rem;
+    white-space: nowrap;
+  }
+
   /* Landing */
   .info-grid {
     grid-template-columns: 1fr;
@@ -1727,12 +1757,47 @@ body {
   max-width: 600px;
   margin: 0 auto;
   padding: 1.5rem 1rem 3rem;
+  position: relative;
+}
+.dashboard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: url("/logo.png") repeat;
+  background-size: 80px 80px;
+  opacity: 0.03;
+  pointer-events: none;
+}
+[data-theme="light"] .dashboard::before {
+  opacity: 0.05;
+}
+.dashboard > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Hero: Welcome + Countdown */
 .dashboard-hero {
   text-align: center;
   margin-bottom: 1.5rem;
+}
+
+.dashboard-fee-reminder {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  padding: 0.35rem 0.85rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+}
+.dashboard-fee-icon {
+  font-size: 0.85rem;
 }
 
 .dashboard-welcome {
@@ -1915,6 +1980,10 @@ body {
   font-size: 1.1rem;
   font-weight: 800;
   line-height: 1.2;
+  color: #F97316; /* orange — readable on dark bg */
+}
+[data-theme="light"] .dashboard-champ-name {
+  color: var(--champ-color);
 }
 
 .dashboard-champ-seed {
@@ -1923,6 +1992,10 @@ body {
   padding: 0.25rem 0.6rem;
   border-radius: 6px;
   white-space: nowrap;
+  color: #F97316;
+}
+[data-theme="light"] .dashboard-champ-seed {
+  color: var(--champ-color);
   flex-shrink: 0;
 }
 
@@ -1979,6 +2052,7 @@ body {
 /* Inline chat on dashboard */
 .dashboard-chat-inline {
   margin-top: 0.75rem;
+  margin-bottom: 1rem;
 }
 .dashboard-chat-inline .community-feed-header {
   display: none;

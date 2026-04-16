@@ -17,7 +17,7 @@ const GAME_OPTIONS = [4, 5, 6, 7];
 
 export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disabled, compact, resultStatus, eliminatedTeams }: MatchupCardProps) {
   const handleTeamClick = (team: Team) => {
-    if (disabled) return;
+    if (disabled || team.tbd) return;
     if (pick?.winner === team.abbreviation) return; // already selected
     onPick({ winner: team.abbreviation, games: pick?.games || 6 });
   };
@@ -110,10 +110,10 @@ export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disable
       {/* Top Team */}
       <button
         onClick={() => topTeam && handleTeamClick(topTeam)}
-        disabled={disabled || !topTeam}
+        disabled={disabled || !topTeam || topTeam.tbd}
         className={`matchup-team ${isTopSelected ? "matchup-team-selected" : ""} matchup-team-top ${
           isTopSelected && resultStatus ? (resultStatus.winnerCorrect ? "matchup-team-correct" : "matchup-team-incorrect") : ""
-        }`}
+        } ${topTeam?.tbd ? "matchup-team-tbd" : ""}`}
         style={getTeamStyle(isTopSelected, topTeam)}
       >
         {topTeam ? (
@@ -137,10 +137,10 @@ export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disable
       {/* Bottom Team */}
       <button
         onClick={() => bottomTeam && handleTeamClick(bottomTeam)}
-        disabled={disabled || !bottomTeam}
+        disabled={disabled || !bottomTeam || bottomTeam.tbd}
         className={`matchup-team ${isBottomSelected ? "matchup-team-selected" : ""} matchup-team-bottom ${
           isBottomSelected && resultStatus ? (resultStatus.winnerCorrect ? "matchup-team-correct" : "matchup-team-incorrect") : ""
-        }`}
+        } ${bottomTeam?.tbd ? "matchup-team-tbd" : ""}`}
         style={getTeamStyle(isBottomSelected, bottomTeam)}
       >
         {bottomTeam ? (

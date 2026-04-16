@@ -120,6 +120,8 @@ export default function ScoreboardPage() {
                   <tr>
                     <th style={{ width: "50px" }}>Rank</th>
                     <th>Name</th>
+                    <th className="scoreboard-conf-th"><span className="scoreboard-full">W. Champ</span><span className="scoreboard-abbr">W</span></th>
+                    <th className="scoreboard-conf-th"><span className="scoreboard-full">E. Champ</span><span className="scoreboard-abbr">E</span></th>
                     <th>Champion</th>
                     <th>MVP</th>
                     <th>{hasResults ? "Pts" : "Total"}</th>
@@ -139,8 +141,22 @@ export default function ScoreboardPage() {
                       {(() => {
                         const isCurrentUser = entry.email === currentUserEmail;
                         const hidden = beforeDeadline && !isCurrentUser;
+                        const westChamp = getTeamByAbbr(entry.picks.westCF?.winner || "");
+                        const eastChamp = getTeamByAbbr(entry.picks.eastCF?.winner || "");
                         return (
                           <>
+                            <td className="scoreboard-conf-cell">
+                              <span className={hidden ? "picks-blurred" : ""}>
+                                <span className="scoreboard-full">{westChamp?.name || "—"}</span>
+                                <span className="scoreboard-abbr">{westChamp?.abbreviation || "—"}</span>
+                              </span>
+                            </td>
+                            <td className="scoreboard-conf-cell">
+                              <span className={hidden ? "picks-blurred" : ""}>
+                                <span className="scoreboard-full">{eastChamp?.name || "—"}</span>
+                                <span className="scoreboard-abbr">{eastChamp?.abbreviation || "—"}</span>
+                              </span>
+                            </td>
                             <td className="scoreboard-champion-mobile">
                               <span className={hidden ? "picks-blurred" : ""}>{entry.champion}</span>
                             </td>

@@ -6,6 +6,7 @@ export interface Team {
   primaryColor: string;
   secondaryColor: string;
   logo?: string;
+  tbd?: boolean;
 }
 
 export interface MatchupPick {

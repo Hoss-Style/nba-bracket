@@ -5,6 +5,7 @@ import { BracketUser, Entry, BracketPicks, MatchupPick } from "@/lib/types";
 import { getEntryByEmail, getAllEntries } from "@/lib/supabase";
 import { getTimeUntilDeadline, isBeforeDeadline } from "@/lib/deadline";
 import { getTeamByAbbr } from "@/lib/teams";
+import { getEntryFeeDollars } from "@/lib/prizePool";
 import { SkeletonCard } from "@/components/Skeleton";
 import CommunityFeed from "@/components/CommunityFeed";
 
@@ -12,30 +13,48 @@ interface DashboardProps {
   user: BracketUser;
 }
 
+interface TeamStat { abbr: string; name: string; color: string; count: number; pct: number }
+
 interface CommunityStats {
   totalEntries: number;
-  topChampion: { abbr: string; name: string; color: string; count: number; pct: number } | null;
+  topChampion: TeamStat | null;
+  topWestChamp: TeamStat | null;
+  topEastChamp: TeamStat | null;
+  topMVP: { name: string; count: number; pct: number } | null;
   topUpsets: { abbr: string; name: string; count: number; pct: number }[];
 }
 
+function topTeamPick(submitted: Entry[], getter: (e: Entry) => string | undefined): TeamStat | null {
+  const counts: Record<string, number> = {};
+  for (const e of submitted) {
+    const val = getter(e);
+    if (val) counts[val] = (counts[val] || 0) + 1;
+  }
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  if (!sorted[0]) return null;
+  const team = getTeamByAbbr(sorted[0][0]);
+  return team
+    ? { abbr: sorted[0][0], name: team.name, color: team.primaryColor, count: sorted[0][1], pct: Math.round((sorted[0][1] / submitted.length) * 100) }
+    : null;
+}
+
 function computeCommunityStats(entries: Entry[]): CommunityStats | null {
-  const submitted = entries.filter((e) => e.picks?.westR1_1 != null);
+  const submitted = entries.filter((e) => e.picks?.westR1_2 != null);
   if (submitted.length === 0) return null;
 
-  // Most picked champion
-  const championCounts: Record<string, number> = {};
+  const topChampion = topTeamPick(submitted, (e) => e.picks.finals?.winner);
+  const topWestChamp = topTeamPick(submitted, (e) => e.picks.westCF?.winner);
+  const topEastChamp = topTeamPick(submitted, (e) => e.picks.eastCF?.winner);
+
+  // Most picked MVP
+  const mvpCounts: Record<string, number> = {};
   for (const e of submitted) {
-    const champ = e.picks.finals?.winner;
-    if (champ) championCounts[champ] = (championCounts[champ] || 0) + 1;
+    const mvp = e.picks.finalsMVP?.trim();
+    if (mvp) mvpCounts[mvp] = (mvpCounts[mvp] || 0) + 1;
   }
-  const sortedChamps = Object.entries(championCounts).sort((a, b) => b[1] - a[1]);
-  const topChampion = sortedChamps[0]
-    ? (() => {
-        const team = getTeamByAbbr(sortedChamps[0][0]);
-        return team
-          ? { abbr: sortedChamps[0][0], name: team.name, color: team.primaryColor, count: sortedChamps[0][1], pct: Math.round((sortedChamps[0][1] / submitted.length) * 100) }
-          : null;
-      })()
+  const sortedMVPs = Object.entries(mvpCounts).sort((a, b) => b[1] - a[1]);
+  const topMVP = sortedMVPs[0]
+    ? { name: sortedMVPs[0][0], count: sortedMVPs[0][1], pct: Math.round((sortedMVPs[0][1] / submitted.length) * 100) }
     : null;
 
   // Popular upsets (R1 picks where lower seed wins)
@@ -63,7 +82,7 @@ function computeCommunityStats(entries: Entry[]): CommunityStats | null {
       return { abbr, name: team?.name || abbr, count, pct: Math.round((count / submitted.length) * 100) };
     });
 
-  return { totalEntries: submitted.length, topChampion, topUpsets };
+  return { totalEntries: submitted.length, topChampion, topWestChamp, topEastChamp, topMVP, topUpsets };
 }
 
 export default function Dashboard({ user }: DashboardProps) {
@@ -86,7 +105,7 @@ export default function Dashboard({ user }: DashboardProps) {
           getEntryByEmail(user.email),
           getAllEntries(),
         ]);
-        if (entry && entry.picks?.westR1_1 != null) {
+        if (entry && entry.picks?.westR1_2 != null) {
           setUserEntry(entry);
         }
         setStats(computeCommunityStats(allEntries));
@@ -135,6 +154,13 @@ export default function Dashboard({ user }: DashboardProps) {
             <div className="dashboard-countdown-label">until picks lock</div>
           </div>
         )}
+
+        {beforeDeadline && (
+          <div className="dashboard-fee-reminder">
+            <span className="dashboard-fee-icon">&#128176;</span>
+            ${getEntryFeeDollars()} entry via Venmo before tipoff
+          </div>
+        )}
       </div>
 
       {/* Bracket Status */}
@@ -162,11 +188,11 @@ export default function Dashboard({ user }: DashboardProps) {
                     </div>
                     <div className="dashboard-champ-info">
                       <span className="dashboard-champ-label">Champion</span>
-                      <span className="dashboard-champ-name" style={{ color: champion.primaryColor }}>
+                      <span className="dashboard-champ-name" style={{ "--champ-color": champion.primaryColor } as React.CSSProperties}>
                         {champion.name}
                       </span>
                     </div>
-                    <span className="dashboard-champ-seed" style={{ background: `${champion.primaryColor}20`, color: champion.primaryColor, border: `1px solid ${champion.primaryColor}40` }}>
+                    <span className="dashboard-champ-seed" style={{ "--champ-color": champion.primaryColor, background: `${champion.primaryColor}20`, border: `1px solid ${champion.primaryColor}40` } as React.CSSProperties}>
                       #{champion.seed} seed
                     </span>
                   </>
@@ -232,10 +258,32 @@ export default function Dashboard({ user }: DashboardProps) {
                 {stats.topChampion && (
                   <div className="dashboard-stat-pill">
                     <span className="dashboard-stat-num" style={{ color: stats.topChampion.color }}>{stats.topChampion.pct}%</span>
-                    <span className="dashboard-stat-txt">pick <strong>{stats.topChampion.name}</strong></span>
+                    <span className="dashboard-stat-txt">pick <strong>{stats.topChampion.name}</strong> champ</span>
                   </div>
                 )}
               </div>
+              <div className="dashboard-stats-row">
+                {stats.topWestChamp && (
+                  <div className="dashboard-stat-pill">
+                    <span className="dashboard-stat-num" style={{ color: stats.topWestChamp.color }}>{stats.topWestChamp.pct}%</span>
+                    <span className="dashboard-stat-txt">pick <strong>{stats.topWestChamp.name}</strong> West</span>
+                  </div>
+                )}
+                {stats.topEastChamp && (
+                  <div className="dashboard-stat-pill">
+                    <span className="dashboard-stat-num" style={{ color: stats.topEastChamp.color }}>{stats.topEastChamp.pct}%</span>
+                    <span className="dashboard-stat-txt">pick <strong>{stats.topEastChamp.name}</strong> East</span>
+                  </div>
+                )}
+              </div>
+              {stats.topMVP && (
+                <div className="dashboard-stats-row">
+                  <div className="dashboard-stat-pill">
+                    <span className="dashboard-stat-num">{stats.topMVP.pct}%</span>
+                    <span className="dashboard-stat-txt">pick <strong>{stats.topMVP.name}</strong> MVP</span>
+                  </div>
+                </div>
+              )}
               {stats.topUpsets.length > 0 && (
                 <div className="dashboard-upsets">
                   <div className="dashboard-upsets-title">Popular Upsets</div>

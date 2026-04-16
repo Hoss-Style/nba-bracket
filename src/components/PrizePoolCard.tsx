@@ -24,7 +24,7 @@ export default function PrizePoolCard() {
   const load = useCallback(async () => {
     try {
       const entries = await getAllEntries();
-      const submitted = entries.filter((e) => e.picks?.westR1_1 != null).length;
+      const submitted = entries.filter((e) => e.picks?.westR1_2 != null).length;
       setBracketCount(submitted);
     } catch {
       setBracketCount(null);

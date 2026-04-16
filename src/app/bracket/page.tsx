@@ -6,7 +6,7 @@ import Nav from "@/components/Nav";
 import Bracket from "@/components/Bracket";
 import MobileBracket from "@/components/MobileBracket";
 import { BracketPicks, BracketUser, Entry } from "@/lib/types";
-import { createEmptyPicks, isPicksComplete, countCompletedPicks } from "@/lib/emptyPicks";
+import { createEmptyPicks, isPicksComplete, countCompletedPicks, totalPickableSlots } from "@/lib/emptyPicks";
 import { getEntryByEmail, updateEntry } from "@/lib/supabase";
 import { isBeforeDeadline } from "@/lib/deadline";
 import { getMatchupStatuses, getEliminatedTeams } from "@/lib/scoring";
@@ -55,7 +55,7 @@ export default function BracketPage() {
     async function loadPicks() {
       try {
         const entry = await getEntryByEmail(userData.email);
-        if (entry && entry.picks.westR1_1 !== null) {
+        if (entry && entry.picks.westR1_2 !== null) {
           setPicks(entry.picks);
           setFinalsMVP(entry.picks.finalsMVP || "");
           setExistingEntry(entry);
@@ -83,11 +83,11 @@ export default function BracketPage() {
 
   const picksWithMVP = { ...picks, finalsMVP };
   const completedCount = countCompletedPicks(picksWithMVP);
-  const totalPicks = 16;
+  const totalPicks = totalPickableSlots();
   const allComplete = isPicksComplete(picksWithMVP);
 
   // Whether user has a previously submitted bracket
-  const hasSubmitted = existingEntry && existingEntry.picks.westR1_1 !== null;
+  const hasSubmitted = existingEntry && existingEntry.picks.westR1_2 !== null;
 
   const handleSubmit = async () => {
     if (!user) return;

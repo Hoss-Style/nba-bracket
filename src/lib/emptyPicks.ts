@@ -1,4 +1,16 @@
 import { BracketPicks } from "./types";
+import { WEST_TEAMS, EAST_TEAMS } from "./teams";
+
+// Matchup keys where an 8-seed (possibly TBD) is involved
+const TBD_MATCHUP_KEYS: (keyof BracketPicks)[] = ["westR1_1", "eastR1_1"];
+
+/** Check if a matchup key involves a TBD team */
+function isTbdMatchup(key: keyof BracketPicks): boolean {
+  if (!TBD_MATCHUP_KEYS.includes(key)) return false;
+  if (key === "westR1_1") return WEST_TEAMS[7]?.tbd === true;
+  if (key === "eastR1_1") return EAST_TEAMS[7]?.tbd === true;
+  return false;
+}
 
 export function createEmptyPicks(): BracketPicks {
   return {
@@ -22,24 +34,33 @@ export function createEmptyPicks(): BracketPicks {
 }
 
 export function isPicksComplete(picks: BracketPicks): boolean {
-  return (
-    picks.westR1_1 !== null &&
-    picks.westR1_2 !== null &&
-    picks.westR1_3 !== null &&
-    picks.westR1_4 !== null &&
-    picks.eastR1_1 !== null &&
-    picks.eastR1_2 !== null &&
-    picks.eastR1_3 !== null &&
-    picks.eastR1_4 !== null &&
-    picks.westR2_1 !== null &&
-    picks.westR2_2 !== null &&
-    picks.eastR2_1 !== null &&
-    picks.eastR2_2 !== null &&
-    picks.westCF !== null &&
-    picks.eastCF !== null &&
-    picks.finals !== null &&
-    picks.finalsMVP.trim() !== ""
-  );
+  const r1Keys: (keyof BracketPicks)[] = [
+    "westR1_1", "westR1_2", "westR1_3", "westR1_4",
+    "eastR1_1", "eastR1_2", "eastR1_3", "eastR1_4",
+  ];
+  for (const key of r1Keys) {
+    if (picks[key] === null && !isTbdMatchup(key)) return false;
+  }
+
+  // Later rounds: if a feeder is TBD, the downstream pick is also skippable
+  const westR1_1Tbd = isTbdMatchup("westR1_1");
+  const eastR1_1Tbd = isTbdMatchup("eastR1_1");
+
+  // R2: westR2_1 depends on westR1_1, eastR2_1 depends on eastR1_1
+  if (picks.westR2_1 === null && !westR1_1Tbd) return false;
+  if (picks.westR2_2 === null) return false;
+  if (picks.eastR2_1 === null && !eastR1_1Tbd) return false;
+  if (picks.eastR2_2 === null) return false;
+
+  // CF: westCF depends on westR2_1 (which depends on westR1_1)
+  if (picks.westCF === null && !westR1_1Tbd) return false;
+  if (picks.eastCF === null && !eastR1_1Tbd) return false;
+
+  // Finals & MVP: only skippable if BOTH conferences have TBD
+  if (picks.finals === null && !westR1_1Tbd && !eastR1_1Tbd) return false;
+  if (picks.finalsMVP.trim() === "" && !westR1_1Tbd && !eastR1_1Tbd) return false;
+
+  return true;
 }
 
 export function countCompletedPicks(picks: BracketPicks): number {
@@ -55,4 +76,13 @@ export function countCompletedPicks(picks: BracketPicks): number {
   }
   if (picks.finalsMVP.trim() !== "") count++;
   return count;
+}
+
+/** Total number of pickable matchups (excludes TBD-blocked slots) */
+export function totalPickableSlots(): number {
+  let total = 16; // 15 matchups + MVP
+  // For each TBD 8-seed, subtract the 1v8 matchup and its downstream slots
+  if (WEST_TEAMS[7]?.tbd) total -= 1; // westR1_1 (downstream westR2_1, westCF, finals, MVP are shared)
+  if (EAST_TEAMS[7]?.tbd) total -= 1; // eastR1_1
+  return total;
 }

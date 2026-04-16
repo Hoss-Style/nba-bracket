@@ -1,16 +1,16 @@
 import { Team } from "./types";
 
-// 2026 NBA Playoff Teams - Updated March 30, 2026
-// Based on current standings (regular season ends April 12)
+// 2026 NBA Playoff Teams - Updated April 15, 2026
+// Based on final standings + play-in results. 8 seeds TBD until Friday.
 export const WEST_TEAMS: Team[] = [
   { seed: 1, name: "Thunder", abbreviation: "OKC", conference: "WEST", primaryColor: "#007AC1", secondaryColor: "#EF6100" },
   { seed: 2, name: "Spurs", abbreviation: "SAS", conference: "WEST", primaryColor: "#C4CED4", secondaryColor: "#000000" },
-  { seed: 3, name: "Lakers", abbreviation: "LAL", conference: "WEST", primaryColor: "#552583", secondaryColor: "#FDB927" },
-  { seed: 4, name: "Nuggets", abbreviation: "DEN", conference: "WEST", primaryColor: "#0E2240", secondaryColor: "#FEC524" },
-  { seed: 5, name: "Timberwolves", abbreviation: "MIN", conference: "WEST", primaryColor: "#0C2340", secondaryColor: "#236192" },
-  { seed: 6, name: "Rockets", abbreviation: "HOU", conference: "WEST", primaryColor: "#CE1141", secondaryColor: "#000000" },
-  { seed: 7, name: "Suns", abbreviation: "PHX", conference: "WEST", primaryColor: "#1D1160", secondaryColor: "#E56020" },
-  { seed: 8, name: "Clippers", abbreviation: "LAC", conference: "WEST", primaryColor: "#C8102E", secondaryColor: "#1D428A" },
+  { seed: 3, name: "Nuggets", abbreviation: "DEN", conference: "WEST", primaryColor: "#0E2240", secondaryColor: "#FEC524" },
+  { seed: 4, name: "Lakers", abbreviation: "LAL", conference: "WEST", primaryColor: "#552583", secondaryColor: "#FDB927" },
+  { seed: 5, name: "Rockets", abbreviation: "HOU", conference: "WEST", primaryColor: "#CE1141", secondaryColor: "#000000" },
+  { seed: 6, name: "Timberwolves", abbreviation: "MIN", conference: "WEST", primaryColor: "#0C2340", secondaryColor: "#236192" },
+  { seed: 7, name: "Trail Blazers", abbreviation: "POR", conference: "WEST", primaryColor: "#E03A3E", secondaryColor: "#000000" },
+  { seed: 8, name: "TBD", abbreviation: "TBD", conference: "WEST", primaryColor: "#666666", secondaryColor: "#999999", tbd: true },
 ];
 
 export const EAST_TEAMS: Team[] = [
@@ -21,7 +21,7 @@ export const EAST_TEAMS: Team[] = [
   { seed: 5, name: "Raptors", abbreviation: "TOR", conference: "EAST", primaryColor: "#CE1141", secondaryColor: "#000000" },
   { seed: 6, name: "Hawks", abbreviation: "ATL", conference: "EAST", primaryColor: "#E03A3E", secondaryColor: "#C1D32F" },
   { seed: 7, name: "76ers", abbreviation: "PHI", conference: "EAST", primaryColor: "#006BB6", secondaryColor: "#ED174C" },
-  { seed: 8, name: "Magic", abbreviation: "ORL", conference: "EAST", primaryColor: "#0077C0", secondaryColor: "#C4CED4" },
+  { seed: 8, name: "TBD", abbreviation: "TBD", conference: "EAST", primaryColor: "#666666", secondaryColor: "#999999", tbd: true },
 ];
 
 export const ALL_TEAMS = [...WEST_TEAMS, ...EAST_TEAMS];
