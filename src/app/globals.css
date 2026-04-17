@@ -2599,7 +2599,9 @@ body {
 
 .community-feed-textarea {
   width: 100%;
-  resize: none;
+  resize: vertical;
+  min-height: 5rem;
+  max-height: 200px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -2647,6 +2649,228 @@ body {
   background: rgba(255, 255, 255, 0.02);
 }
 
+/* ===== GIF rendering in messages ===== */
+.community-feed-body {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.cf-msg-text {
+  white-space: pre-wrap;
+}
+.cf-msg-gif {
+  display: block;
+  max-width: min(240px, 70vw);
+  max-height: 200px;
+  border-radius: 10px;
+  margin-top: 0.4rem;
+  border: 1px solid var(--border);
+  object-fit: contain;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* ===== Reactions bar on messages ===== */
+.cf-reactions-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.45rem;
+  align-items: center;
+}
+.cf-reaction-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.55rem;
+  min-height: 26px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.cf-reaction-chip:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+.cf-reaction-chip:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+.cf-reaction-chip-mine {
+  border-color: var(--accent-orange);
+  background: rgba(229, 96, 32, 0.12);
+}
+.cf-reaction-emoji {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+.cf-reaction-count {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.cf-reaction-chip-mine .cf-reaction-count {
+  color: var(--text-primary);
+}
+.cf-reaction-add-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.cf-reaction-add {
+  width: 28px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.cf-reaction-add:hover {
+  border-color: var(--accent-orange);
+  color: var(--accent-orange);
+  background: rgba(229, 96, 32, 0.06);
+}
+.cf-reaction-add-icon {
+  font-size: 1rem;
+  line-height: 1;
+  font-weight: 600;
+}
+.cf-reaction-picker {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  display: flex;
+  gap: 0.15rem;
+  padding: 0.4rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+  z-index: 20;
+}
+.cf-reaction-picker-item {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.cf-reaction-picker-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ===== Giphy picker ===== */
+.cf-gif-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.cf-gif-trigger {
+  height: 40px;
+  padding: 0 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.cf-gif-trigger:hover,
+.cf-gif-trigger[aria-expanded="true"] {
+  border-color: var(--accent-orange);
+  color: var(--accent-orange);
+  background: rgba(229, 96, 32, 0.06);
+}
+.cf-gif-popover {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  width: min(320px, calc(100vw - 2rem));
+  max-height: min(50vh, 400px);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  z-index: 20;
+  padding: 0.6rem;
+  gap: 0.5rem;
+}
+.cf-gif-search {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  font-size: 16px;
+  outline: none;
+  box-sizing: border-box;
+}
+.cf-gif-search:focus {
+  border-color: var(--accent-orange);
+}
+.cf-gif-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.35rem;
+  overflow-y: auto;
+  min-height: 120px;
+  max-height: 300px;
+}
+.cf-gif-item {
+  padding: 0;
+  border: none;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  cursor: pointer;
+  overflow: hidden;
+  aspect-ratio: 1;
+  transition: transform 0.12s;
+}
+.cf-gif-item:hover {
+  transform: scale(1.04);
+}
+.cf-gif-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cf-gif-loading,
+.cf-gif-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  padding: 1.5rem 0;
+}
+.cf-gif-powered {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  text-align: right;
+  letter-spacing: 0.05em;
+}
+
 @media (max-width: 480px) {
   .community-feed-list {
     max-height: min(48vh, 340px);
@@ -2654,6 +2878,23 @@ body {
 
   .community-feed-title {
     font-size: 1rem;
+  }
+
+  /* 2-column GIF grid on mobile */
+  .cf-gif-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Reaction picker anchored to right edge if button is near right screen edge */
+  .cf-reaction-picker {
+    left: auto;
+    right: 0;
+  }
+
+  /* Smaller padding on chips for tight screens */
+  .cf-reaction-chip {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.78rem;
   }
 }
 
@@ -2664,6 +2905,56 @@ body {
   margin: 2rem auto 0;
   padding: 0 0.25rem;
   box-sizing: border-box;
+}
+
+/* Rules panel (home tab) */
+.rules-panel {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 0.25rem;
+  box-sizing: border-box;
+}
+.rules-panel-header {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+.rules-panel-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem;
+  color: var(--text-primary);
+}
+.rules-panel-sub {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+.rules-panel-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  overflow-x: auto;
+}
+.rules-panel-card .scoring-table {
+  width: 100%;
+  margin: 0;
+}
+.rules-panel-notes {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1rem 0.35rem 1.35rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+.rules-panel-notes li {
+  margin-bottom: 0.4rem;
+}
+.rules-panel-notes strong {
+  color: var(--text-primary);
 }
 
 .landing-page .prize-pool-card {

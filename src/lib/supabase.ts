@@ -267,6 +267,22 @@ export async function addReaction(reaction: Omit<Reaction, "id">): Promise<boole
   return res.ok;
 }
 
+export async function deleteReaction(id: string): Promise<boolean> {
+  if (!isConfigured()) {
+    const stored = localStorage.getItem("bracket_reactions");
+    const all: Reaction[] = stored ? JSON.parse(stored) : [];
+    const next = all.filter((r) => r.id !== id);
+    localStorage.setItem("bracket_reactions", JSON.stringify(next));
+    return true;
+  }
+
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/reactions?id=eq.${encodeURIComponent(id)}`,
+    { method: "DELETE", headers }
+  );
+  return res.ok;
+}
+
 // ============ COMMENTS ============
 
 export async function getComments(entryId: string): Promise<Comment[]> {

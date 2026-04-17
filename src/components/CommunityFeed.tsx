@@ -1,17 +1,34 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Comment } from "@/lib/types";
-import { getComments, addComment } from "@/lib/supabase";
+import { Comment, Reaction } from "@/lib/types";
+import {
+  getComments,
+  addComment,
+  getCommentReactions,
+  addReaction,
+  deleteReaction,
+} from "@/lib/supabase";
+import {
+  searchGifs,
+  getTrendingGifs,
+  giphyConfigured,
+  extractGiphyUrls,
+  type GiphyGif,
+} from "@/lib/giphy";
 
 const GLOBAL_ENTRY_ID = "global";
 const POLL_INTERVAL = 8000;
+const MAX_LEN = 280;
 
 /** Shown inside the popover when the emoji button is opened */
 const PICKER_EMOJIS = [
   "😀", "😂", "🤣", "😅", "😊", "🙌", "👏", "🔥", "💯", "❤️", "🤝", "😤", "🤞", "😬", "👀", "🙏",
   "⛹️", "🏀", "🏆", "🎯", "⚡", "💪", "🍿", "🤯", "😎", "🥳", "😭", "🤔", "👍", "👎", "✨",
 ] as const;
+
+/** Quick-react set shown on message reaction pickers */
+const QUICK_REACTIONS = ["👍", "❤️", "😂", "🔥", "🏀", "💯", "😭", "🤯"] as const;
 
 function timeAgo(dateStr: string): string {
   const t = new Date(dateStr).getTime();
@@ -44,6 +61,59 @@ function avatarStyle(name: string | undefined | null): { background: string; col
   };
 }
 
+/** Split a message body into text and gif parts for rendering */
+const GIF_MARKER_RE = /\[gif:(https?:\/\/[^\]]+)\]/g;
+type MsgPart = { kind: "text"; value: string } | { kind: "gif"; url: string };
+function parseBody(text: string): MsgPart[] {
+  const parts: MsgPart[] = [];
+  let lastIdx = 0;
+  text.replace(GIF_MARKER_RE, (match, url, offset) => {
+    if (offset > lastIdx) parts.push({ kind: "text", value: text.slice(lastIdx, offset) });
+    parts.push({ kind: "gif", url });
+    lastIdx = offset + match.length;
+    return match;
+  });
+  if (lastIdx < text.length) parts.push({ kind: "text", value: text.slice(lastIdx) });
+  return parts;
+}
+
+/** Convert raw Giphy URLs pasted into text to the [gif:...] marker on send */
+function normalizeGifsOnSend(text: string): string {
+  const urls = extractGiphyUrls(text);
+  let out = text;
+  for (const url of urls) {
+    // Only replace if not already wrapped in [gif:...]
+    const marker = `[gif:${url}]`;
+    if (!out.includes(marker)) {
+      out = out.replace(url, marker);
+    }
+  }
+  return out;
+}
+
+interface GroupedReaction {
+  emoji: string;
+  count: number;
+  mine: Reaction | null;
+}
+function groupReactions(reactions: Reaction[], me: string | null | undefined): GroupedReaction[] {
+  const map = new Map<string, GroupedReaction>();
+  for (const r of reactions) {
+    const existing = map.get(r.emoji);
+    if (existing) {
+      existing.count += 1;
+      if (!existing.mine && me && r.userName === me) existing.mine = r;
+    } else {
+      map.set(r.emoji, {
+        emoji: r.emoji,
+        count: 1,
+        mine: me && r.userName === me ? r : null,
+      });
+    }
+  }
+  return Array.from(map.values()).sort((a, b) => b.count - a.count);
+}
+
 interface CommunityFeedProps {
   /** When set, user can post; otherwise feed is read-only with a login hint */
   userName?: string | null;
@@ -51,24 +121,50 @@ interface CommunityFeedProps {
 
 export default function CommunityFeed({ userName }: CommunityFeedProps) {
   const [messages, setMessages] = useState<Comment[]>([]);
+  const [reactionsByComment, setReactionsByComment] = useState<Record<string, Reaction[]>>({});
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  const emojiPickerRef = useRef<HTMLDivElement>(null);
-  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+
+  // Composer emoji picker
+  const composerEmojiRef = useRef<HTMLDivElement>(null);
+  const [composerEmojiOpen, setComposerEmojiOpen] = useState(false);
+
+  // Composer GIF picker
+  const composerGifRef = useRef<HTMLDivElement>(null);
+  const [gifOpen, setGifOpen] = useState(false);
+  const [gifQuery, setGifQuery] = useState("");
+  const [gifResults, setGifResults] = useState<GiphyGif[]>([]);
+  const [gifLoading, setGifLoading] = useState(false);
+
+  // Per-message reaction picker: which comment id has its picker open
+  const [msgPickerFor, setMsgPickerFor] = useState<string | null>(null);
+  const msgPickerRef = useRef<HTMLDivElement>(null);
+
   const didInitialScroll = useRef(false);
 
-  const loadMessages = useCallback(async () => {
+  const loadMessagesAndReactions = useCallback(async () => {
     const comments = await getComments(GLOBAL_ENTRY_ID);
     setMessages(comments);
+    // Load reactions for each message with an id
+    const withIds = comments.filter((c): c is Comment & { id: string } => Boolean(c.id));
+    const entries = await Promise.all(
+      withIds.map(async (c) => {
+        const rs = await getCommentReactions(c.id);
+        return [c.id, rs] as const;
+      })
+    );
+    const map: Record<string, Reaction[]> = {};
+    for (const [id, rs] of entries) map[id] = rs;
+    setReactionsByComment(map);
   }, []);
 
   useEffect(() => {
-    loadMessages();
-    const interval = setInterval(loadMessages, POLL_INTERVAL);
+    loadMessagesAndReactions();
+    const interval = setInterval(loadMessagesAndReactions, POLL_INTERVAL);
     return () => clearInterval(interval);
-  }, [loadMessages]);
+  }, [loadMessagesAndReactions]);
 
   const sorted = useMemo(
     () =>
@@ -92,14 +188,15 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
     didInitialScroll.current = true;
   }, [sorted.length]);
 
+  // Close composer emoji picker on outside click / Escape
   useEffect(() => {
-    if (!emojiPickerOpen) return;
+    if (!composerEmojiOpen) return;
     const onDoc = (e: MouseEvent) => {
-      const root = emojiPickerRef.current;
-      if (root && !root.contains(e.target as Node)) setEmojiPickerOpen(false);
+      const root = composerEmojiRef.current;
+      if (root && !root.contains(e.target as Node)) setComposerEmojiOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setEmojiPickerOpen(false);
+      if (e.key === "Escape") setComposerEmojiOpen(false);
     };
     document.addEventListener("mousedown", onDoc);
     document.addEventListener("keydown", onKey);
@@ -107,21 +204,82 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
       document.removeEventListener("mousedown", onDoc);
       document.removeEventListener("keydown", onKey);
     };
-  }, [emojiPickerOpen]);
+  }, [composerEmojiOpen]);
+
+  // Close GIF picker on outside click / Escape
+  useEffect(() => {
+    if (!gifOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      const root = composerGifRef.current;
+      if (root && !root.contains(e.target as Node)) setGifOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setGifOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [gifOpen]);
+
+  // Close per-message picker on outside click / Escape
+  useEffect(() => {
+    if (!msgPickerFor) return;
+    const onDoc = (e: MouseEvent) => {
+      const root = msgPickerRef.current;
+      if (root && !root.contains(e.target as Node)) setMsgPickerFor(null);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMsgPickerFor(null);
+    };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [msgPickerFor]);
+
+  // Load trending GIFs when picker opens (if no query yet)
+  useEffect(() => {
+    if (!gifOpen) return;
+    if (!gifQuery && gifResults.length === 0) {
+      setGifLoading(true);
+      getTrendingGifs().then((gifs) => {
+        setGifResults(gifs);
+        setGifLoading(false);
+      });
+    }
+  }, [gifOpen, gifQuery, gifResults.length]);
+
+  // Debounced GIF search
+  useEffect(() => {
+    if (!gifOpen) return;
+    if (!gifQuery.trim()) return;
+    setGifLoading(true);
+    const handle = setTimeout(async () => {
+      const gifs = await searchGifs(gifQuery);
+      setGifResults(gifs);
+      setGifLoading(false);
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [gifQuery, gifOpen]);
 
   const insertEmoji = (emoji: string) => {
     const el = textareaRef.current;
     if (!el) {
-      setText((t) => (t + emoji).slice(0, 280));
-      setEmojiPickerOpen(false);
+      setText((t) => (t + emoji).slice(0, MAX_LEN));
+      setComposerEmojiOpen(false);
       return;
     }
     const start = el.selectionStart;
     const end = el.selectionEnd;
     const next = text.slice(0, start) + emoji + text.slice(end);
-    if (next.length > 280) return;
+    if (next.length > MAX_LEN) return;
     setText(next);
-    setEmojiPickerOpen(false);
+    setComposerEmojiOpen(false);
     requestAnimationFrame(() => {
       el.focus();
       const pos = start + emoji.length;
@@ -129,21 +287,76 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
     });
   };
 
+  const insertGif = (gif: GiphyGif) => {
+    const marker = `[gif:${gif.url}]`;
+    const next = text ? `${text}\n${marker}` : marker;
+    if (next.length > MAX_LEN) {
+      // If too long, just replace text with the gif marker
+      setText(marker.slice(0, MAX_LEN));
+    } else {
+      setText(next);
+    }
+    setGifOpen(false);
+    setGifQuery("");
+    setGifResults([]);
+  };
+
   const handleSend = async () => {
-    const trimmed = text.trim();
-    if (!trimmed || sending || !userName) return;
+    const raw = text.trim();
+    if (!raw || sending || !userName) return;
+    const normalized = normalizeGifsOnSend(raw);
     setSending(true);
     setText("");
     await addComment({
       entryId: GLOBAL_ENTRY_ID,
       userName,
-      text: trimmed,
+      text: normalized,
       createdAt: new Date().toISOString(),
     });
-    await loadMessages();
+    await loadMessagesAndReactions();
     setSending(false);
     requestAnimationFrame(() => scrollFeedToBottom());
   };
+
+  const toggleReaction = async (commentId: string, emoji: string) => {
+    if (!userName) return;
+    const existing = reactionsByComment[commentId] || [];
+    const mine = existing.find((r) => r.emoji === emoji && r.userName === userName);
+    if (mine && mine.id) {
+      // Optimistic removal
+      setReactionsByComment((prev) => ({
+        ...prev,
+        [commentId]: (prev[commentId] || []).filter((r) => r.id !== mine.id),
+      }));
+      await deleteReaction(mine.id);
+    } else {
+      const optimistic: Reaction = {
+        id: `optimistic-${Math.random().toString(36).slice(2)}`,
+        entryId: GLOBAL_ENTRY_ID,
+        commentId,
+        emoji,
+        userName,
+        createdAt: new Date().toISOString(),
+      };
+      setReactionsByComment((prev) => ({
+        ...prev,
+        [commentId]: [...(prev[commentId] || []), optimistic],
+      }));
+      await addReaction({
+        entryId: GLOBAL_ENTRY_ID,
+        commentId,
+        emoji,
+        userName,
+        createdAt: new Date().toISOString(),
+      });
+    }
+    // Refresh from server for canonical state
+    const fresh = await getCommentReactions(commentId);
+    setReactionsByComment((prev) => ({ ...prev, [commentId]: fresh }));
+    setMsgPickerFor(null);
+  };
+
+  const gifAvailable = giphyConfigured();
 
   return (
     <section className="community-feed" aria-labelledby="community-feed-heading">
@@ -177,6 +390,10 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
               const key =
                 msg.id ??
                 `${msg.createdAt ?? ""}-${msg.userName ?? ""}-${body.slice(0, 12)}`;
+              const parts = parseBody(body);
+              const msgReactions = (msg.id && reactionsByComment[msg.id]) || [];
+              const grouped = groupReactions(msgReactions, userName);
+              const canReact = Boolean(userName && msg.id);
               return (
                 <article key={key} className={`community-feed-post ${isMe ? "community-feed-post-me" : ""}`}>
                   <div
@@ -197,7 +414,74 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
                         {timeAgo(msg.createdAt ?? "")}
                       </time>
                     </header>
-                    <p className="community-feed-body">{body}</p>
+                    <div className="community-feed-body">
+                      {parts.map((p, i) =>
+                        p.kind === "text" ? (
+                          <span key={i} className="cf-msg-text">{p.value}</span>
+                        ) : (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            key={i}
+                            src={p.url}
+                            alt="GIF"
+                            className="cf-msg-gif"
+                            loading="lazy"
+                          />
+                        )
+                      )}
+                    </div>
+
+                    {(grouped.length > 0 || canReact) && (
+                      <div className="cf-reactions-bar">
+                        {grouped.map((g) => (
+                          <button
+                            key={g.emoji}
+                            type="button"
+                            className={`cf-reaction-chip ${g.mine ? "cf-reaction-chip-mine" : ""}`}
+                            onClick={() => msg.id && toggleReaction(msg.id, g.emoji)}
+                            disabled={!canReact}
+                            title={g.mine ? "Remove your reaction" : "React"}
+                          >
+                            <span className="cf-reaction-emoji">{g.emoji}</span>
+                            <span className="cf-reaction-count">{g.count}</span>
+                          </button>
+                        ))}
+                        {canReact && (
+                          <div
+                            className="cf-reaction-add-wrap"
+                            ref={msgPickerFor === msg.id ? msgPickerRef : undefined}
+                          >
+                            <button
+                              type="button"
+                              className="cf-reaction-add"
+                              aria-expanded={msgPickerFor === msg.id}
+                              aria-label="Add a reaction"
+                              onClick={() =>
+                                setMsgPickerFor((cur) => (cur === msg.id ? null : msg.id!))
+                              }
+                            >
+                              <span className="cf-reaction-add-icon" aria-hidden>
+                                +
+                              </span>
+                            </button>
+                            {msgPickerFor === msg.id && (
+                              <div className="cf-reaction-picker" role="dialog" aria-label="Pick a reaction">
+                                {QUICK_REACTIONS.map((emoji) => (
+                                  <button
+                                    key={emoji}
+                                    type="button"
+                                    className="cf-reaction-picker-item"
+                                    onClick={() => msg.id && toggleReaction(msg.id, emoji)}
+                                  >
+                                    {emoji}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </article>
               );
@@ -217,16 +501,19 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
               placeholder="Share a take, reaction, or trash talk…"
               value={text}
               onChange={(e) => setText(e.target.value)}
-              maxLength={280}
-              rows={2}
+              maxLength={MAX_LEN}
+              rows={3}
             />
             <div className="community-feed-compose-footer">
-              <div className="community-feed-compose-left" ref={emojiPickerRef}>
+              <div className="community-feed-compose-left" ref={composerEmojiRef}>
                 <button
                   type="button"
                   className="community-feed-emoji-trigger"
-                  onClick={() => setEmojiPickerOpen((o) => !o)}
-                  aria-expanded={emojiPickerOpen}
+                  onClick={() => {
+                    setComposerEmojiOpen((o) => !o);
+                    setGifOpen(false);
+                  }}
+                  aria-expanded={composerEmojiOpen}
                   aria-haspopup="dialog"
                   aria-controls="community-emoji-picker"
                   title="Add emoji"
@@ -250,7 +537,7 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
                     <circle cx="15" cy="9" r="1" fill="currentColor" stroke="none" />
                   </svg>
                 </button>
-                {emojiPickerOpen && (
+                {composerEmojiOpen && (
                   <div
                     id="community-emoji-picker"
                     className="community-feed-emoji-popover"
@@ -273,8 +560,60 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
                   </div>
                 )}
               </div>
+
+              {gifAvailable && (
+                <div className="cf-gif-wrap" ref={composerGifRef}>
+                  <button
+                    type="button"
+                    className="cf-gif-trigger"
+                    onClick={() => {
+                      setGifOpen((o) => !o);
+                      setComposerEmojiOpen(false);
+                    }}
+                    aria-expanded={gifOpen}
+                    aria-haspopup="dialog"
+                    title="Add GIF"
+                  >
+                    GIF
+                  </button>
+                  {gifOpen && (
+                    <div className="cf-gif-popover" role="dialog" aria-label="Pick a GIF">
+                      <input
+                        type="text"
+                        className="cf-gif-search"
+                        placeholder="Search GIFs…"
+                        value={gifQuery}
+                        onChange={(e) => setGifQuery(e.target.value)}
+                        autoFocus
+                      />
+                      <div className="cf-gif-grid" aria-busy={gifLoading}>
+                        {gifLoading && gifResults.length === 0 ? (
+                          <div className="cf-gif-loading">Loading…</div>
+                        ) : gifResults.length === 0 ? (
+                          <div className="cf-gif-empty">No GIFs found.</div>
+                        ) : (
+                          gifResults.map((g) => (
+                            <button
+                              key={g.id}
+                              type="button"
+                              className="cf-gif-item"
+                              onClick={() => insertGif(g)}
+                              title={g.title}
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={g.previewUrl} alt={g.title} loading="lazy" />
+                            </button>
+                          ))
+                        )}
+                      </div>
+                      <div className="cf-gif-powered">Powered by GIPHY</div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="community-feed-compose-spacer" aria-hidden />
-              <span className="community-feed-char">{text.length}/280</span>
+              <span className="community-feed-char">{text.length}/{MAX_LEN}</span>
               <button
                 type="button"
                 className="btn btn-primary community-feed-post-btn"

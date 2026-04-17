@@ -6,6 +6,7 @@ import Nav from "@/components/Nav";
 import Dashboard from "@/components/Dashboard";
 import CommunityFeed from "@/components/CommunityFeed";
 import PrizePoolCard from "@/components/PrizePoolCard";
+import RulesPanel from "@/components/RulesPanel";
 import HomeSectionTabs from "@/components/HomeSectionTabs";
 import { BracketUser } from "@/lib/types";
 import { getEntryByEmail, submitEntry, updateEntry } from "@/lib/supabase";
@@ -174,6 +175,7 @@ export default function Home() {
                   label: "Community",
                   content: <CommunityFeed userName={loggedInUser.name} />,
                 },
+                { id: "rules", label: "Rules", content: <RulesPanel /> },
               ]}
             />
           </div>
