@@ -1,11 +1,11 @@
 // Playoff deadline configuration
 // UPDATE THIS: Set to the tip-off time of the first playoff game
 // Format: ISO 8601 string in UTC
-// Example: April 19, 2026 at 12:30 PM PST = 7:30 PM UTC
-export const PLAYOFF_DEADLINE = "2026-04-19T19:30:00Z";
+// April 18, 2026 at 10:00 AM PDT = 5:00 PM UTC
+export const PLAYOFF_DEADLINE = "2026-04-18T17:00:00Z";
 
 // Human-readable display
-export const DEADLINE_DISPLAY = "Saturday, April 19th at 12:30 PM PST";
+export const DEADLINE_DISPLAY = "Saturday, April 18th at 10:00 AM PT";
 
 export function isBeforeDeadline(): boolean {
   if (typeof window !== "undefined") {
