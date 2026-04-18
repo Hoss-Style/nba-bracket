@@ -165,6 +165,42 @@ export function calculateMaxPotential(
   return maxRemaining;
 }
 
+export function calculateMatchupPoints(
+  matchupId: keyof BracketPicks,
+  playerPick: MatchupPick | null,
+  actualResults: BracketPicks
+): { winner: number; games: number; upset: number; total: number } | null {
+  const actualResult = actualResults[matchupId] as MatchupPick | null;
+  if (!playerPick || !actualResult) return null;
+
+  const round = MATCHUP_ROUNDS[matchupId as string];
+  const points = ROUND_POINTS[round];
+  let winner = 0, games = 0, upset = 0;
+
+  if (playerPick.winner === actualResult.winner) {
+    winner = points.winner;
+    if (playerPick.games === actualResult.games) games = points.games;
+    const winnerSeed = getTeamSeed(playerPick.winner);
+    const loserSeed = getOpponentSeed(matchupId as string, playerPick.winner, actualResults);
+    if (loserSeed > 0 && isUpset(winnerSeed, loserSeed)) upset = points.upset;
+  }
+  return { winner, games, upset, total: winner + games + upset };
+}
+
+export function calculateAllMatchupPoints(
+  playerPicks: BracketPicks,
+  actualResults: BracketPicks
+): Record<string, number> {
+  const out: Record<string, number> = {};
+  const matchupIds = Object.keys(MATCHUP_ROUNDS) as (keyof BracketPicks)[];
+  for (const matchupId of matchupIds) {
+    const playerPick = playerPicks[matchupId] as MatchupPick | null;
+    const result = calculateMatchupPoints(matchupId, playerPick, actualResults);
+    if (result) out[matchupId as string] = result.total;
+  }
+  return out;
+}
+
 export function calculateScore(
   playerPicks: BracketPicks,
   actualResults: BracketPicks,
@@ -179,29 +215,11 @@ export function calculateScore(
 
   for (const matchupId of matchupIds) {
     const playerPick = playerPicks[matchupId] as MatchupPick | null;
-    const actualResult = actualResults[matchupId] as MatchupPick | null;
-
-    if (!playerPick || !actualResult) continue;
-
-    const round = MATCHUP_ROUNDS[matchupId];
-    const points = ROUND_POINTS[round];
-
-    // Correct winner
-    if (playerPick.winner === actualResult.winner) {
-      correctWinners += points.winner;
-
-      // Correct number of games (only if winner is correct)
-      if (playerPick.games === actualResult.games) {
-        correctGames += points.games;
-      }
-
-      // Upset bonus (based on original regular season seeds)
-      const winnerSeed = getTeamSeed(playerPick.winner);
-      const loserSeed = getOpponentSeed(matchupId, playerPick.winner, actualResults);
-      if (loserSeed > 0 && isUpset(winnerSeed, loserSeed)) {
-        upsetBonuses += points.upset;
-      }
-    }
+    const result = calculateMatchupPoints(matchupId, playerPick, actualResults);
+    if (!result) continue;
+    correctWinners += result.winner;
+    correctGames += result.games;
+    upsetBonuses += result.upset;
   }
 
   // Finals MVP

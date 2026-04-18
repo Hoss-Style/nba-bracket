@@ -6,7 +6,7 @@ import Nav from "@/components/Nav";
 import Bracket from "@/components/Bracket";
 import { Entry, MatchupResultStatus } from "@/lib/types";
 import { getEntryById, getActualResults } from "@/lib/supabase";
-import { getMatchupStatuses, getEliminatedTeams } from "@/lib/scoring";
+import { getMatchupStatuses, getEliminatedTeams, calculateAllMatchupPoints } from "@/lib/scoring";
 import Toast from "@/components/Toast";
 
 export default function ViewBracketPage() {
@@ -16,6 +16,7 @@ export default function ViewBracketPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [matchupStatuses, setMatchupStatuses] = useState<Record<string, MatchupResultStatus> | null>(null);
+  const [matchupPoints, setMatchupPoints] = useState<Record<string, number> | null>(null);
   const [mvpCorrect, setMvpCorrect] = useState<boolean | null>(null);
   const [eliminatedTeams, setEliminatedTeams] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<{ show: boolean; message: string; type: "success" | "error" }>({ show: false, message: "", type: "success" });
@@ -32,6 +33,7 @@ export default function ViewBracketPage() {
           setEntry(result);
           if (actualResults) {
             setMatchupStatuses(getMatchupStatuses(result.picks, actualResults.picks));
+            setMatchupPoints(calculateAllMatchupPoints(result.picks, actualResults.picks));
             setEliminatedTeams(getEliminatedTeams(actualResults.picks));
             if (actualResults.finalsMVP && result.picks.finalsMVP) {
               setMvpCorrect(
@@ -142,6 +144,7 @@ export default function ViewBracketPage() {
                   finalsMVP={entry.picks.finalsMVP || ""}
                   onFinalsMVPChange={noop}
                   matchupStatuses={matchupStatuses}
+                  matchupPoints={matchupPoints}
                   mvpCorrect={mvpCorrect}
                   eliminatedTeams={eliminatedTeams}
                 />

@@ -10,12 +10,13 @@ interface MatchupCardProps {
   disabled?: boolean;
   compact?: boolean;
   resultStatus?: { winnerCorrect: boolean; gamesCorrect: boolean };
+  pointsEarned?: number;
   eliminatedTeams?: Set<string>;
 }
 
 const GAME_OPTIONS = [4, 5, 6, 7];
 
-export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disabled, compact, resultStatus, eliminatedTeams }: MatchupCardProps) {
+export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disabled, compact, resultStatus, pointsEarned, eliminatedTeams }: MatchupCardProps) {
   const handleTeamClick = (team: Team) => {
     if (disabled || team.tbd) return;
     if (pick?.winner === team.abbreviation) {
@@ -182,6 +183,11 @@ export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disable
               {g}
             </button>
           ))}
+          {resultStatus && typeof pointsEarned === "number" && (
+            <span className={`matchup-points-badge ${pointsEarned > 0 ? "matchup-points-earned" : "matchup-points-zero"}`}>
+              {pointsEarned > 0 ? `+${pointsEarned}` : "0"}
+            </span>
+          )}
         </div>
       )}
     </div>

@@ -125,7 +125,7 @@ export default function ScoreboardPage() {
                     <th>Champion</th>
                     <th>MVP</th>
                     <th>{hasResults ? "Pts" : "Total"}</th>
-                    {hasResults && <th className="scoreboard-hide-mobile">Max</th>}
+                    {hasResults && <th>Max</th>}
                     <th style={{ width: "70px" }}></th>
                   </tr>
                 </thead>
@@ -172,7 +172,7 @@ export default function ScoreboardPage() {
                         </span>
                       </td>
                       {hasResults && (
-                        <td className="scoreboard-hide-mobile">
+                        <td>
                           <span className="score-max-potential">{entry.maxPotential}</span>
                         </td>
                       )}

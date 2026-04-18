@@ -9,7 +9,7 @@ import { BracketPicks, BracketUser, Entry } from "@/lib/types";
 import { createEmptyPicks, isPicksComplete, countCompletedPicks, totalPickableSlots } from "@/lib/emptyPicks";
 import { getEntryByEmail, updateEntry, submitEntry } from "@/lib/supabase";
 import { isBeforeDeadline } from "@/lib/deadline";
-import { getMatchupStatuses, getEliminatedTeams } from "@/lib/scoring";
+import { getMatchupStatuses, getEliminatedTeams, calculateAllMatchupPoints } from "@/lib/scoring";
 import { getActualResults } from "@/lib/supabase";
 import confetti from "canvas-confetti";
 import Toast from "@/components/Toast";
@@ -26,6 +26,7 @@ export default function BracketPage() {
   const [existingEntry, setExistingEntry] = useState<Entry | null>(null);
   const [editing, setEditing] = useState(false);
   const [matchupStatuses, setMatchupStatuses] = useState<Record<string, import("@/lib/types").MatchupResultStatus> | null>(null);
+  const [matchupPoints, setMatchupPoints] = useState<Record<string, number> | null>(null);
   const [mvpCorrect, setMvpCorrect] = useState<boolean | null>(null);
   const [eliminatedTeams, setEliminatedTeams] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<{ show: boolean; message: string; type: "success" | "error" }>({ show: false, message: "", type: "success" });
@@ -70,6 +71,7 @@ export default function BracketPage() {
           const actualResults = await getActualResults();
           if (actualResults) {
             setMatchupStatuses(getMatchupStatuses(entry.picks, actualResults.picks));
+            setMatchupPoints(calculateAllMatchupPoints(entry.picks, actualResults.picks));
             setEliminatedTeams(getEliminatedTeams(actualResults.picks));
             if (actualResults.finalsMVP && entry.picks.finalsMVP) {
               setMvpCorrect(
@@ -254,6 +256,7 @@ export default function BracketPage() {
                 finalsMVP={existingEntry!.picks.finalsMVP || ""}
                 onFinalsMVPChange={noop}
                 matchupStatuses={matchupStatuses}
+                matchupPoints={matchupPoints}
                 mvpCorrect={mvpCorrect}
                 eliminatedTeams={eliminatedTeams}
               />

@@ -14,6 +14,7 @@ interface BracketProps {
   finalsMVP: string;
   onFinalsMVPChange: (mvp: string) => void;
   matchupStatuses?: Record<string, MatchupResultStatus> | null;
+  matchupPoints?: Record<string, number> | null;
   mvpCorrect?: boolean | null;
   eliminatedTeams?: Set<string>;
 }
@@ -24,7 +25,7 @@ function teamFromAbbr(abbr: string | undefined): Team | null {
   return getTeamByAbbr(abbr) || null;
 }
 
-export default function Bracket({ picks, onPicksChange, disabled, finalsMVP, onFinalsMVPChange, matchupStatuses, mvpCorrect, eliminatedTeams }: BracketProps) {
+export default function Bracket({ picks, onPicksChange, disabled, finalsMVP, onFinalsMVPChange, matchupStatuses, matchupPoints, mvpCorrect, eliminatedTeams }: BracketProps) {
   const [mvpQuery, setMvpQuery] = useState("");
   const [mvpOpen, setMvpOpen] = useState(false);
   const [mvpActiveIndex, setMvpActiveIndex] = useState(0);
@@ -134,6 +135,7 @@ export default function Bracket({ picks, onPicksChange, disabled, finalsMVP, onF
                 onPick={(p) => updatePick("westR1_1", p)}
                 disabled={disabled}
                 resultStatus={matchupStatuses?.["westR1_1"] ?? undefined}
+                pointsEarned={matchupPoints?.["westR1_1"]}
                 eliminatedTeams={eliminatedTeams}
               />
               <MatchupCard
@@ -143,6 +145,7 @@ export default function Bracket({ picks, onPicksChange, disabled, finalsMVP, onF
                 onPick={(p) => updatePick("westR1_2", p)}
                 disabled={disabled}
                 resultStatus={matchupStatuses?.["westR1_2"] ?? undefined}
+                pointsEarned={matchupPoints?.["westR1_2"]}
                 eliminatedTeams={eliminatedTeams}
               />
               <MatchupCard
@@ -152,6 +155,7 @@ export default function Bracket({ picks, onPicksChange, disabled, finalsMVP, onF
                 onPick={(p) => updatePick("westR1_3", p)}
                 disabled={disabled}
                 resultStatus={matchupStatuses?.["westR1_3"] ?? undefined}
+                pointsEarned={matchupPoints?.["westR1_3"]}
                 eliminatedTeams={eliminatedTeams}
               />
               <MatchupCard
@@ -161,6 +165,7 @@ export default function Bracket({ picks, onPicksChange, disabled, finalsMVP, onF
                 onPick={(p) => updatePick("westR1_4", p)}
                 disabled={disabled}
                 resultStatus={matchupStatuses?.["westR1_4"] ?? undefined}
+                pointsEarned={matchupPoints?.["westR1_4"]}
                 eliminatedTeams={eliminatedTeams}
               />
             </div>
@@ -178,6 +183,7 @@ export default function Bracket({ picks, onPicksChange, disabled, finalsMVP, onF
                 disabled={disabled || !westR2_1_top || !westR2_1_bot}
                 compact
                 resultStatus={matchupStatuses?.["westR2_1"] ?? undefined}
+                pointsEarned={matchupPoints?.["westR2_1"]}
                 eliminatedTeams={eliminatedTeams}
               />
               <MatchupCard
@@ -188,6 +194,7 @@ export default function Bracket({ picks, onPicksChange, disabled, finalsMVP, onF
                 disabled={disabled || !westR2_2_top || !westR2_2_bot}
                 compact
                 resultStatus={matchupStatuses?.["westR2_2"] ?? undefined}
+                pointsEarned={matchupPoints?.["westR2_2"]}
                 eliminatedTeams={eliminatedTeams}
               />
             </div>
@@ -205,6 +212,7 @@ export default function Bracket({ picks, onPicksChange, disabled, finalsMVP, onF
                 disabled={disabled || !westCF_top || !westCF_bot}
                 compact
                 resultStatus={matchupStatuses?.["westCF"] ?? undefined}
+                pointsEarned={matchupPoints?.["westCF"]}
                 eliminatedTeams={eliminatedTeams}
               />
             </div>
@@ -223,6 +231,7 @@ export default function Bracket({ picks, onPicksChange, disabled, finalsMVP, onF
           onPick={(p) => updatePick("finals", p)}
           disabled={disabled || !finals_west || !finals_east}
           resultStatus={matchupStatuses?.["finals"] ?? undefined}
+          pointsEarned={matchupPoints?.["finals"]}
           eliminatedTeams={eliminatedTeams}
         />
         {champion && (() => {
@@ -367,6 +376,7 @@ export default function Bracket({ picks, onPicksChange, disabled, finalsMVP, onF
                 onPick={(p) => updatePick("eastR1_1", p)}
                 disabled={disabled}
                 resultStatus={matchupStatuses?.["eastR1_1"] ?? undefined}
+                pointsEarned={matchupPoints?.["eastR1_1"]}
                 eliminatedTeams={eliminatedTeams}
               />
               <MatchupCard
@@ -376,6 +386,7 @@ export default function Bracket({ picks, onPicksChange, disabled, finalsMVP, onF
                 onPick={(p) => updatePick("eastR1_2", p)}
                 disabled={disabled}
                 resultStatus={matchupStatuses?.["eastR1_2"] ?? undefined}
+                pointsEarned={matchupPoints?.["eastR1_2"]}
                 eliminatedTeams={eliminatedTeams}
               />
               <MatchupCard
@@ -385,6 +396,7 @@ export default function Bracket({ picks, onPicksChange, disabled, finalsMVP, onF
                 onPick={(p) => updatePick("eastR1_3", p)}
                 disabled={disabled}
                 resultStatus={matchupStatuses?.["eastR1_3"] ?? undefined}
+                pointsEarned={matchupPoints?.["eastR1_3"]}
                 eliminatedTeams={eliminatedTeams}
               />
               <MatchupCard
@@ -394,6 +406,7 @@ export default function Bracket({ picks, onPicksChange, disabled, finalsMVP, onF
                 onPick={(p) => updatePick("eastR1_4", p)}
                 disabled={disabled}
                 resultStatus={matchupStatuses?.["eastR1_4"] ?? undefined}
+                pointsEarned={matchupPoints?.["eastR1_4"]}
                 eliminatedTeams={eliminatedTeams}
               />
             </div>
@@ -411,6 +424,7 @@ export default function Bracket({ picks, onPicksChange, disabled, finalsMVP, onF
                 disabled={disabled || !eastR2_1_top || !eastR2_1_bot}
                 compact
                 resultStatus={matchupStatuses?.["eastR2_1"] ?? undefined}
+                pointsEarned={matchupPoints?.["eastR2_1"]}
                 eliminatedTeams={eliminatedTeams}
               />
               <MatchupCard
@@ -421,6 +435,7 @@ export default function Bracket({ picks, onPicksChange, disabled, finalsMVP, onF
                 disabled={disabled || !eastR2_2_top || !eastR2_2_bot}
                 compact
                 resultStatus={matchupStatuses?.["eastR2_2"] ?? undefined}
+                pointsEarned={matchupPoints?.["eastR2_2"]}
                 eliminatedTeams={eliminatedTeams}
               />
             </div>
@@ -438,6 +453,7 @@ export default function Bracket({ picks, onPicksChange, disabled, finalsMVP, onF
                 disabled={disabled || !eastCF_top || !eastCF_bot}
                 compact
                 resultStatus={matchupStatuses?.["eastCF"] ?? undefined}
+                pointsEarned={matchupPoints?.["eastCF"]}
                 eliminatedTeams={eliminatedTeams}
               />
             </div>
