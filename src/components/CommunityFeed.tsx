@@ -8,6 +8,8 @@ import {
   getCommentReactions,
   addReaction,
   deleteReaction,
+  uploadChatImage,
+  chatImageThumbUrl,
 } from "@/lib/supabase";
 import {
   searchGifs,
@@ -16,6 +18,7 @@ import {
   extractGiphyUrls,
   type GiphyGif,
 } from "@/lib/giphy";
+import imageCompression from "browser-image-compression";
 
 const GLOBAL_ENTRY_ID = "global";
 const POLL_INTERVAL = 8000;
@@ -61,38 +64,41 @@ function avatarStyle(name: string | undefined | null): { background: string; col
   };
 }
 
-/** Split a message body into text and gif parts for rendering */
-const GIF_MARKER_RE = /\[gif:(https?:\/\/[^\s\]]+)\]/g;
-type MsgPart = { kind: "text"; value: string } | { kind: "gif"; url: string };
+/** Split a message body into text, gif, and image parts for rendering */
+const MEDIA_MARKER_RE = /\[(gif|img):(https?:\/\/[^\s\]]+)\]/g;
+type MsgPart =
+  | { kind: "text"; value: string }
+  | { kind: "gif"; url: string }
+  | { kind: "img"; url: string };
 function parseBody(text: string): MsgPart[] {
-  // First, unwrap any nested [gif:[gif:URL]] → [gif:URL] for backward-compat
-  // with messages posted before the normalizer fix.
+  // First, unwrap any nested [gif:[gif:URL]] / [img:[img:URL]] → [gif:URL]/[img:URL]
   let cleaned = text;
   let prev = "";
   while (cleaned !== prev) {
     prev = cleaned;
-    cleaned = cleaned.replace(/\[gif:\s*\[gif:(https?:\/\/[^\s\]]+)\]\s*\]/g, "[gif:$1]");
+    cleaned = cleaned.replace(
+      /\[(gif|img):\s*\[(gif|img):(https?:\/\/[^\s\]]+)\]\s*\]/g,
+      "[$1:$3]"
+    );
   }
-  // Strip stray orphan "[gif:" or trailing "]" left over from old posts
-  cleaned = cleaned.replace(/\[gif:\s*$/g, "");
+  // Strip stray orphan "[gif:" / "[img:" or trailing "]"
+  cleaned = cleaned.replace(/\[(?:gif|img):\s*$/g, "");
 
   const parts: MsgPart[] = [];
   let lastIdx = 0;
-  cleaned.replace(GIF_MARKER_RE, (match, url, offset) => {
+  cleaned.replace(MEDIA_MARKER_RE, (match, kind, url, offset) => {
     if (offset > lastIdx) {
       const textChunk = cleaned.slice(lastIdx, offset);
-      // Skip pure whitespace / orphan brackets between GIFs
       if (textChunk.replace(/[\s\]]+/g, "").length > 0) {
         parts.push({ kind: "text", value: textChunk });
       }
     }
-    parts.push({ kind: "gif", url });
+    parts.push({ kind: kind as "gif" | "img", url });
     lastIdx = offset + match.length;
     return match;
   });
   if (lastIdx < cleaned.length) {
     const tail = cleaned.slice(lastIdx);
-    // Skip trailing orphan "]" or whitespace
     if (tail.replace(/[\s\]]+/g, "").length > 0) {
       parts.push({ kind: "text", value: tail });
     }
@@ -159,6 +165,10 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
   const [reactionsByComment, setReactionsByComment] = useState<Record<string, Reaction[]>>({});
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -336,6 +346,46 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
     setGifResults([]);
   };
 
+  const handleImagePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // reset so same file can be picked again
+    if (!file || !userName) return;
+    if (!file.type.startsWith("image/")) {
+      setUploadError("That doesn't look like an image.");
+      return;
+    }
+    // Reject videos and enforce a 15MB raw cap before compression
+    if (file.size > 15 * 1024 * 1024) {
+      setUploadError("Image is too large (max 15MB).");
+      return;
+    }
+    setUploadError(null);
+    setUploading(true);
+    try {
+      // Compress: max 1600px, target ~500KB, JPEG
+      const compressed = await imageCompression(file, {
+        maxSizeMB: 0.5,
+        maxWidthOrHeight: 1600,
+        useWebWorker: true,
+        fileType: "image/jpeg",
+        initialQuality: 0.8,
+      });
+      const url = await uploadChatImage(compressed, userName);
+      if (!url) {
+        setUploadError("Upload failed. Try again.");
+        return;
+      }
+      const marker = `[img:${url}]`;
+      const next = text ? `${text}\n${marker}` : marker;
+      setText(next.length > MAX_LEN ? marker.slice(0, MAX_LEN) : next);
+    } catch (err) {
+      console.error("Image upload failed:", err);
+      setUploadError("Upload failed. Try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSend = async () => {
     const raw = text.trim();
     if (!raw || sending || !userName) return;
@@ -450,20 +500,41 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
                       </time>
                     </header>
                     <div className="community-feed-body">
-                      {parts.map((p, i) =>
-                        p.kind === "text" ? (
-                          <span key={i} className="cf-msg-text">{p.value}</span>
-                        ) : (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
+                      {parts.map((p, i) => {
+                        if (p.kind === "text") {
+                          return <span key={i} className="cf-msg-text">{p.value}</span>;
+                        }
+                        if (p.kind === "gif") {
+                          return (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              key={i}
+                              src={p.url}
+                              alt="GIF"
+                              className="cf-msg-gif"
+                              loading="lazy"
+                            />
+                          );
+                        }
+                        // img — thumbnail via Supabase transform, tap to expand
+                        return (
+                          <button
                             key={i}
-                            src={p.url}
-                            alt="GIF"
-                            className="cf-msg-gif"
-                            loading="lazy"
-                          />
-                        )
-                      )}
+                            type="button"
+                            className="cf-msg-image-btn"
+                            onClick={() => setLightboxUrl(p.url)}
+                            aria-label="View full-size image"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={chatImageThumbUrl(p.url, 600)}
+                              alt="Chat image"
+                              className="cf-msg-image"
+                              loading="lazy"
+                            />
+                          </button>
+                        );
+                      })}
                     </div>
 
                     {(grouped.length > 0 || canReact) && (
@@ -661,6 +732,44 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
                 </div>
               )}
 
+              {/* Image picker (native file input) */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImagePick}
+                className="cf-image-input"
+                aria-label="Upload image"
+              />
+              <button
+                type="button"
+                className="cf-image-trigger"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                title="Add image"
+                aria-label="Add image"
+              >
+                {uploading ? (
+                  <span className="cf-image-trigger-spinner" aria-hidden>…</span>
+                ) : (
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <path d="M21 15l-5-5L5 21" />
+                  </svg>
+                )}
+              </button>
+
               <div className="community-feed-compose-spacer" aria-hidden />
               <span className="community-feed-char">{text.length}/{MAX_LEN}</span>
               <button
@@ -672,6 +781,12 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
                 {sending ? "Posting…" : "Post"}
               </button>
             </div>
+            {uploadError && (
+              <div className="cf-upload-error" role="alert">{uploadError}</div>
+            )}
+            {uploading && (
+              <div className="cf-upload-status">Uploading image…</div>
+            )}
           </div>
         ) : (
           <div className="community-feed-locked">
@@ -679,6 +794,35 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
           </div>
         )}
       </div>
+
+      {/* Lightbox for tap-to-expand chat images */}
+      {lightboxUrl && (
+        <div
+          className="cf-lightbox"
+          role="dialog"
+          aria-label="Full-size image"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <button
+            type="button"
+            className="cf-lightbox-close"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightboxUrl(null);
+            }}
+            aria-label="Close"
+          >
+            ×
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={lightboxUrl}
+            alt="Full-size"
+            className="cf-lightbox-img"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </section>
   );
 }

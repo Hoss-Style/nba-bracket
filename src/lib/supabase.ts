@@ -368,3 +368,44 @@ function getLocalEntries(): Entry[] {
     return [];
   }
 }
+
+// ============ CHAT IMAGE UPLOADS ============
+
+const CHAT_IMAGES_BUCKET = "chat-images";
+
+/** Upload a compressed image blob to Supabase Storage, return its public URL. */
+export async function uploadChatImage(file: Blob, userName: string): Promise<string | null> {
+  if (!isConfigured()) return null;
+
+  // Build a filename: userName/timestamp-random.ext
+  const ext = file.type.split("/")[1] || "jpg";
+  const safeName = userName.replace(/[^a-z0-9]/gi, "_").toLowerCase() || "user";
+  const filename = `${safeName}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+  const uploadHeaders: Record<string, string> = {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    "Content-Type": file.type || "image/jpeg",
+    "x-upsert": "false",
+  };
+
+  const res = await fetch(
+    `${SUPABASE_URL}/storage/v1/object/${CHAT_IMAGES_BUCKET}/${encodeURI(filename)}`,
+    { method: "POST", headers: uploadHeaders, body: file }
+  );
+  if (!res.ok) {
+    console.error("Chat image upload failed:", res.status, await res.text());
+    return null;
+  }
+
+  // Public URL
+  return `${SUPABASE_URL}/storage/v1/object/public/${CHAT_IMAGES_BUCKET}/${encodeURI(filename)}`;
+}
+
+/** Generate a thumbnail URL using Supabase's image transform API. */
+export function chatImageThumbUrl(url: string, width: number = 600): string {
+  if (!url.includes("/storage/v1/object/public/")) return url;
+  // Supabase transform endpoint: /storage/v1/render/image/public/<bucket>/<path>
+  const transformUrl = url.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/");
+  return `${transformUrl}?width=${width}&quality=75&resize=contain`;
+}
