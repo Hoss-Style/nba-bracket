@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Nav from "@/components/Nav";
-import { ScoreBreakdown, BracketPicks } from "@/lib/types";
+import { ScoreBreakdown, BracketPicks, Entry } from "@/lib/types";
+
+type ActualResultsLite = { picks: BracketPicks; finalsMVP: string };
 import { getAllEntries, getActualResults } from "@/lib/supabase";
 import { calculateScore, calculateMaxPotential } from "@/lib/scoring";
 import { getTeamByAbbr } from "@/lib/teams";
@@ -20,12 +22,17 @@ interface RankedEntry {
   picks: BracketPicks;
 }
 
+// Polling cadence (only while tab is visible)
+const RESULTS_POLL_MS = 30_000;   // every 30s — small payload
+const ENTRIES_POLL_MS = 300_000;  // every 5min — catches new signups / admin edits
+const DEADLINE_TICK_MS = 5_000;   // every 5s near the deadline boundary
+
 export default function ScoreboardPage() {
-  const [rankings, setRankings] = useState<RankedEntry[]>([]);
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [results, setResults] = useState<ActualResultsLite | null>(null);
   const [loading, setLoading] = useState(true);
-  const [hasResults, setHasResults] = useState(false);
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
-  const beforeDeadline = isBeforeDeadline();
+  const [beforeDeadline, setBeforeDeadline] = useState(isBeforeDeadline());
 
   useEffect(() => {
     const stored = localStorage.getItem("bracket_user");
@@ -36,58 +43,114 @@ export default function ScoreboardPage() {
     }
   }, []);
 
+  // Initial load: entries + results together
   useEffect(() => {
-    async function load() {
+    let cancelled = false;
+    (async () => {
       try {
-        const [allEntries, results] = await Promise.all([
-          getAllEntries(),
-          getActualResults(),
-        ]);
-
-        if (results) {
-          setHasResults(true);
-          const ranked = allEntries
-            .map((entry) => {
-              const score = calculateScore(entry.picks, results.picks, results.finalsMVP);
-              const maxPotential = calculateMaxPotential(entry.picks, results.picks, results.finalsMVP);
-              const champion = entry.picks.finals?.winner || "—";
-              return {
-                id: entry.id || "",
-                name: entry.name,
-                email: entry.email,
-                score,
-                maxPotential,
-                champion: getTeamByAbbr(champion)?.name || champion,
-                finalsMVP: entry.picks.finalsMVP || "—",
-                picks: entry.picks,
-              };
-            })
-            .sort((a, b) => b.score.total - a.score.total);
-          setRankings(ranked);
-        } else {
-          const ranked = allEntries.map((entry) => {
-            const champion = entry.picks.finals?.winner || "—";
-            return {
-              id: entry.id || "",
-              name: entry.name,
-              email: entry.email,
-              score: { correctWinners: 0, correctGames: 0, upsetBonuses: 0, finalsMVP: 0, total: 0 },
-              maxPotential: 0,
-              champion: getTeamByAbbr(champion)?.name || champion,
-              finalsMVP: entry.picks.finalsMVP || "—",
-              picks: entry.picks,
-            };
-          });
-          setRankings(ranked);
-        }
+        const [e, r] = await Promise.all([getAllEntries(), getActualResults()]);
+        if (cancelled) return;
+        setEntries(e);
+        setResults(r);
       } catch (err) {
         console.error("Failed to load scoreboard:", err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    }
-    load();
+    })();
+    return () => { cancelled = true; };
   }, []);
+
+  // Smart polling: only while tab is visible
+  // - results every 30s (small, fresh scores)
+  // - entries every 5min (new signups / admin edits)
+  // - deadline check every 5s so blurs clear right at the deadline
+  useEffect(() => {
+    let resultsInt: ReturnType<typeof setInterval> | null = null;
+    let entriesInt: ReturnType<typeof setInterval> | null = null;
+    let deadlineInt: ReturnType<typeof setInterval> | null = null;
+
+    const start = () => {
+      if (resultsInt || entriesInt || deadlineInt) return;
+      resultsInt = setInterval(async () => {
+        try {
+          const r = await getActualResults();
+          if (r) setResults(r);
+        } catch { /* keep last good state on transient error */ }
+      }, RESULTS_POLL_MS);
+      entriesInt = setInterval(async () => {
+        try {
+          const e = await getAllEntries();
+          setEntries(e);
+        } catch { /* keep last good state */ }
+      }, ENTRIES_POLL_MS);
+      deadlineInt = setInterval(() => {
+        setBeforeDeadline(isBeforeDeadline());
+      }, DEADLINE_TICK_MS);
+    };
+
+    const stop = () => {
+      if (resultsInt) clearInterval(resultsInt);
+      if (entriesInt) clearInterval(entriesInt);
+      if (deadlineInt) clearInterval(deadlineInt);
+      resultsInt = entriesInt = deadlineInt = null;
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        // Immediate refresh on tab focus so users see latest on return
+        setBeforeDeadline(isBeforeDeadline());
+        getActualResults().then((r) => r && setResults(r)).catch(() => {});
+        start();
+      } else {
+        stop();
+      }
+    };
+
+    // Start immediately (assume visible on mount)
+    start();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
+
+  // Compute rankings from cached entries + freshest results
+  const { rankings, hasResults } = useMemo<{ rankings: RankedEntry[]; hasResults: boolean }>(() => {
+    if (results) {
+      const ranked = entries.map((entry) => {
+        const score = calculateScore(entry.picks, results.picks, results.finalsMVP);
+        const maxPotential = calculateMaxPotential(entry.picks, results.picks, results.finalsMVP);
+        const champion = entry.picks.finals?.winner || "—";
+        return {
+          id: entry.id || "",
+          name: entry.name,
+          email: entry.email,
+          score,
+          maxPotential,
+          champion: getTeamByAbbr(champion)?.name || champion,
+          finalsMVP: entry.picks.finalsMVP || "—",
+          picks: entry.picks,
+        };
+      }).sort((a, b) => b.score.total - a.score.total);
+      return { rankings: ranked, hasResults: true };
+    }
+    const ranked = entries.map((entry) => {
+      const champion = entry.picks.finals?.winner || "—";
+      return {
+        id: entry.id || "",
+        name: entry.name,
+        email: entry.email,
+        score: { correctWinners: 0, correctGames: 0, upsetBonuses: 0, finalsMVP: 0, total: 0 },
+        maxPotential: 0,
+        champion: getTeamByAbbr(champion)?.name || champion,
+        finalsMVP: entry.picks.finalsMVP || "—",
+        picks: entry.picks,
+      };
+    });
+    return { rankings: ranked, hasResults: false };
+  }, [entries, results]);
 
   const getRankClass = (i: number) => {
     if (i === 0) return "rank-1";
