@@ -34,11 +34,17 @@ const isConfigured = () => SUPABASE_URL && SUPABASE_ANON_KEY;
 
 // ============ ENTRIES ============
 
+/** Normalize an email for storage and lookup — always lowercased, trimmed. */
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 export async function submitEntry(entry: Omit<Entry, "id">): Promise<Entry | null> {
+  const normalized = { ...entry, email: normalizeEmail(entry.email) };
   if (!isConfigured()) {
     // Fallback: save to localStorage for demo mode
     const entries = getLocalEntries();
-    const newEntry = { ...entry, id: crypto.randomUUID() };
+    const newEntry = { ...normalized, id: crypto.randomUUID() };
     entries.push(newEntry);
     localStorage.setItem("bracket_entries", JSON.stringify(entries));
     return newEntry;
@@ -48,12 +54,12 @@ export async function submitEntry(entry: Omit<Entry, "id">): Promise<Entry | nul
     method: "POST",
     headers,
     body: JSON.stringify({
-      name: entry.name,
-      email: entry.email,
-      phone: entry.phone,
-      pin: entry.pin,
-      picks: entry.picks,
-      submitted_at: entry.submittedAt,
+      name: normalized.name,
+      email: normalized.email,
+      phone: normalized.phone,
+      pin: normalized.pin,
+      picks: normalized.picks,
+      submitted_at: normalized.submittedAt,
     }),
   });
 
@@ -87,13 +93,18 @@ export async function getAllEntries(): Promise<Entry[]> {
 // ============ GET / UPDATE ENTRY BY EMAIL ============
 
 export async function getEntryByEmail(email: string): Promise<Entry | null> {
+  const normalized = normalizeEmail(email);
   if (!isConfigured()) {
     const entries = getLocalEntries();
-    return entries.find((e) => e.email.toLowerCase() === email.toLowerCase()) || null;
+    return entries.find((e) => e.email.toLowerCase() === normalized) || null;
   }
 
+  // Use ilike for case-insensitive match so mixed-case emails saved before
+  // the normalization fix are still findable. Escape _ and % so emails with
+  // underscores (e.g. john_doe@gmail.com) match exactly.
+  const escaped = normalized.replace(/[\\%_]/g, (m) => "\\" + m);
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/entries?email=eq.${encodeURIComponent(email)}&limit=1`,
+    `${SUPABASE_URL}/rest/v1/entries?email=ilike.${encodeURIComponent(escaped)}&limit=1`,
     { headers }
   );
   if (!res.ok) return null;
