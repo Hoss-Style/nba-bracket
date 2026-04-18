@@ -2855,21 +2855,61 @@ body {
   color: var(--accent-orange);
   background: rgba(229, 96, 32, 0.06);
 }
+/* Dim the page behind the GIF picker */
+.cf-gif-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1000;
+}
 .cf-gif-popover {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 0;
-  width: min(320px, calc(100vw - 2rem));
-  max-height: min(50vh, 400px);
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(420px, calc(100vw - 1.5rem));
+  max-height: min(75vh, 560px);
   display: flex;
   flex-direction: column;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  z-index: 20;
-  padding: 0.6rem;
-  gap: 0.5rem;
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  z-index: 1001;
+  padding: 0.85rem;
+  gap: 0.6rem;
+  box-sizing: border-box;
+}
+.cf-gif-popover-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.cf-gif-popover-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  flex: 1;
+}
+.cf-gif-popover-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, color 0.12s;
+}
+.cf-gif-popover-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
 }
 .cf-gif-search {
   width: 100%;
@@ -2888,23 +2928,30 @@ body {
 .cf-gif-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.35rem;
+  gap: 0.4rem;
   overflow-y: auto;
-  min-height: 120px;
-  max-height: 300px;
+  overflow-x: hidden;
+  min-height: 220px;
+  flex: 1;
+  align-content: start;
+  padding-right: 0.2rem;
 }
 .cf-gif-item {
   padding: 0;
-  border: none;
+  margin: 0;
+  border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   overflow: hidden;
-  aspect-ratio: 1;
-  transition: transform 0.12s;
+  width: 100%;
+  height: 110px;
+  display: block;
+  transition: transform 0.12s, border-color 0.12s;
 }
 .cf-gif-item:hover {
   transform: scale(1.04);
+  border-color: var(--accent-orange);
 }
 .cf-gif-item img {
   width: 100%;
@@ -2936,9 +2983,17 @@ body {
     font-size: 1rem;
   }
 
-  /* 2-column GIF grid on mobile */
+  /* 2-column GIF grid on mobile, slightly taller tiles */
   .cf-gif-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .cf-gif-item {
+    height: 130px;
+  }
+  .cf-gif-popover {
+    width: calc(100vw - 1rem);
+    max-height: 85vh;
+    padding: 0.75rem;
   }
 
   /* Reaction picker anchored to right edge if button is near right screen edge */

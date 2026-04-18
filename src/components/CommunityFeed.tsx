@@ -62,33 +62,68 @@ function avatarStyle(name: string | undefined | null): { background: string; col
 }
 
 /** Split a message body into text and gif parts for rendering */
-const GIF_MARKER_RE = /\[gif:(https?:\/\/[^\]]+)\]/g;
+const GIF_MARKER_RE = /\[gif:(https?:\/\/[^\s\]]+)\]/g;
 type MsgPart = { kind: "text"; value: string } | { kind: "gif"; url: string };
 function parseBody(text: string): MsgPart[] {
+  // First, unwrap any nested [gif:[gif:URL]] → [gif:URL] for backward-compat
+  // with messages posted before the normalizer fix.
+  let cleaned = text;
+  let prev = "";
+  while (cleaned !== prev) {
+    prev = cleaned;
+    cleaned = cleaned.replace(/\[gif:\s*\[gif:(https?:\/\/[^\s\]]+)\]\s*\]/g, "[gif:$1]");
+  }
+  // Strip stray orphan "[gif:" or trailing "]" left over from old posts
+  cleaned = cleaned.replace(/\[gif:\s*$/g, "");
+
   const parts: MsgPart[] = [];
   let lastIdx = 0;
-  text.replace(GIF_MARKER_RE, (match, url, offset) => {
-    if (offset > lastIdx) parts.push({ kind: "text", value: text.slice(lastIdx, offset) });
+  cleaned.replace(GIF_MARKER_RE, (match, url, offset) => {
+    if (offset > lastIdx) {
+      const textChunk = cleaned.slice(lastIdx, offset);
+      // Skip pure whitespace / orphan brackets between GIFs
+      if (textChunk.replace(/[\s\]]+/g, "").length > 0) {
+        parts.push({ kind: "text", value: textChunk });
+      }
+    }
     parts.push({ kind: "gif", url });
     lastIdx = offset + match.length;
     return match;
   });
-  if (lastIdx < text.length) parts.push({ kind: "text", value: text.slice(lastIdx) });
+  if (lastIdx < cleaned.length) {
+    const tail = cleaned.slice(lastIdx);
+    // Skip trailing orphan "]" or whitespace
+    if (tail.replace(/[\s\]]+/g, "").length > 0) {
+      parts.push({ kind: "text", value: tail });
+    }
+  }
   return parts;
 }
 
-/** Convert raw Giphy URLs pasted into text to the [gif:...] marker on send */
+/** Convert raw Giphy URLs pasted into text to the [gif:...] marker on send.
+ *  Skips URLs that are already inside a [gif:...] marker so we never double-wrap.
+ */
 function normalizeGifsOnSend(text: string): string {
-  const urls = extractGiphyUrls(text);
-  let out = text;
+  // Temporarily remove existing markers so they don't get double-wrapped
+  const placeholders: string[] = [];
+  const PLACEHOLDER = "\u0001GIFMARKER\u0001";
+  let safe = text.replace(/\[gif:https?:\/\/[^\]\s]+\]/g, (match) => {
+    placeholders.push(match);
+    return PLACEHOLDER + (placeholders.length - 1) + PLACEHOLDER;
+  });
+
+  // Wrap any remaining bare Giphy URLs
+  const urls = extractGiphyUrls(safe);
   for (const url of urls) {
-    // Only replace if not already wrapped in [gif:...]
-    const marker = `[gif:${url}]`;
-    if (!out.includes(marker)) {
-      out = out.replace(url, marker);
-    }
+    safe = safe.split(url).join(`[gif:${url}]`);
   }
-  return out;
+
+  // Restore the original markers
+  safe = safe.replace(/\u0001GIFMARKER\u0001(\d+)\u0001GIFMARKER\u0001/g, (_, idx) => {
+    return placeholders[parseInt(idx, 10)] || "";
+  });
+
+  return safe;
 }
 
 interface GroupedReaction {
@@ -577,37 +612,51 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
                     GIF
                   </button>
                   {gifOpen && (
-                    <div className="cf-gif-popover" role="dialog" aria-label="Pick a GIF">
-                      <input
-                        type="text"
-                        className="cf-gif-search"
-                        placeholder="Search GIFs…"
-                        value={gifQuery}
-                        onChange={(e) => setGifQuery(e.target.value)}
-                        autoFocus
-                      />
-                      <div className="cf-gif-grid" aria-busy={gifLoading}>
-                        {gifLoading && gifResults.length === 0 ? (
-                          <div className="cf-gif-loading">Loading…</div>
-                        ) : gifResults.length === 0 ? (
-                          <div className="cf-gif-empty">No GIFs found.</div>
-                        ) : (
-                          gifResults.map((g) => (
-                            <button
-                              key={g.id}
-                              type="button"
-                              className="cf-gif-item"
-                              onClick={() => insertGif(g)}
-                              title={g.title}
-                            >
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={g.previewUrl} alt={g.title} loading="lazy" />
-                            </button>
-                          ))
-                        )}
+                    <>
+                      <div className="cf-gif-backdrop" onClick={() => setGifOpen(false)} />
+                      <div className="cf-gif-popover" role="dialog" aria-label="Pick a GIF">
+                        <div className="cf-gif-popover-header">
+                          <span className="cf-gif-popover-title">Pick a GIF</span>
+                          <button
+                            type="button"
+                            className="cf-gif-popover-close"
+                            onClick={() => setGifOpen(false)}
+                            aria-label="Close GIF picker"
+                          >
+                            ×
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          className="cf-gif-search"
+                          placeholder="Search GIFs…"
+                          value={gifQuery}
+                          onChange={(e) => setGifQuery(e.target.value)}
+                          autoFocus
+                        />
+                        <div className="cf-gif-grid" aria-busy={gifLoading}>
+                          {gifLoading && gifResults.length === 0 ? (
+                            <div className="cf-gif-loading">Loading…</div>
+                          ) : gifResults.length === 0 ? (
+                            <div className="cf-gif-empty">No GIFs found.</div>
+                          ) : (
+                            gifResults.map((g) => (
+                              <button
+                                key={g.id}
+                                type="button"
+                                className="cf-gif-item"
+                                onClick={() => insertGif(g)}
+                                title={g.title}
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={g.previewUrl} alt={g.title} loading="lazy" />
+                              </button>
+                            ))
+                          )}
+                        </div>
+                        <div className="cf-gif-powered">Powered by GIPHY</div>
                       </div>
-                      <div className="cf-gif-powered">Powered by GIPHY</div>
-                    </div>
+                    </>
                   )}
                 </div>
               )}

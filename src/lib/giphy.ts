@@ -80,8 +80,11 @@ export async function searchGifs(query: string, limit = 20): Promise<GiphyGif[]>
   }
 }
 
-/** Detect giphy.com URLs in free text (media or view links) for auto-conversion. */
-const GIPHY_URL_RE = /https?:\/\/(?:media\d?\.|i\.)?giphy\.com\/\S+?\.gif\S*/gi;
+/** Detect giphy.com URLs in free text (media or view links) for auto-conversion.
+ *  Excludes chars `]` and whitespace so it never bleeds into an existing
+ *  [gif:...] marker or beyond the URL.
+ */
+const GIPHY_URL_RE = /https?:\/\/(?:media\d?\.|i\.)?giphy\.com\/[^\s\]]+?\.gif[^\s\]]*/gi;
 export function extractGiphyUrls(text: string): string[] {
   const matches = text.match(GIPHY_URL_RE);
   return matches ? Array.from(new Set(matches)) : [];
