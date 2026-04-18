@@ -294,18 +294,20 @@ body {
 }
 
 .home-section-tabs-nav {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   gap: 0.45rem;
   margin-bottom: 1rem;
   padding: 0.35rem 0 0.65rem;
   border-bottom: 1px solid var(--border);
+  width: 100%;
 }
 
 .home-section-tab {
-  flex: 1;
+  width: 100%;
   min-width: 0;
-  padding: 0.75rem 0.85rem;
+  padding: 0.75rem 0.5rem;
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-muted);
@@ -317,6 +319,7 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: center;
 }
 
 @media (max-width: 640px) {
