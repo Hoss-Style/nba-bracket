@@ -10,6 +10,7 @@ import {
   deleteReaction,
   uploadChatImage,
   chatImageThumbUrl,
+  getAllEntries,
 } from "@/lib/supabase";
 import {
   searchGifs,
@@ -69,9 +70,47 @@ const MEDIA_MARKER_RE = /\[(gif|img):(https?:\/\/[^\s\]]+)\]/g;
 type MsgPart =
   | { kind: "text"; value: string }
   | { kind: "gif"; url: string }
-  | { kind: "img"; url: string };
-function parseBody(text: string): MsgPart[] {
-  // First, unwrap any nested [gif:[gif:URL]] / [img:[img:URL]] → [gif:URL]/[img:URL]
+  | { kind: "img"; url: string }
+  | { kind: "mention"; name: string; matched: boolean };
+
+/** Split a text chunk further on @mentions, matching against known user names. */
+function splitTextMentions(text: string, userNames: string[], me?: string | null): MsgPart[] {
+  if (!text) return [];
+  // Sort names longest-first so "John Lewis" matches before "John"
+  const sorted = [...userNames].sort((a, b) => b.length - a.length);
+  const parts: MsgPart[] = [];
+  let i = 0;
+  while (i < text.length) {
+    const at = text.indexOf("@", i);
+    if (at === -1) {
+      parts.push({ kind: "text", value: text.slice(i) });
+      break;
+    }
+    // Push text before the @
+    if (at > i) parts.push({ kind: "text", value: text.slice(i, at) });
+    // Try to match a known user name after @
+    const after = text.slice(at + 1);
+    const matched = sorted.find((n) =>
+      after.toLowerCase().startsWith(n.toLowerCase())
+    );
+    if (matched) {
+      parts.push({
+        kind: "mention",
+        name: matched,
+        matched: Boolean(me && matched.toLowerCase() === me.toLowerCase()),
+      });
+      i = at + 1 + matched.length;
+    } else {
+      // Not a known user — just pass the "@" through as text
+      parts.push({ kind: "text", value: "@" });
+      i = at + 1;
+    }
+  }
+  return parts;
+}
+
+function parseBody(text: string, userNames: string[] = [], me?: string | null): MsgPart[] {
+  // Unwrap any nested [gif:[gif:URL]] / [img:[img:URL]]
   let cleaned = text;
   let prev = "";
   while (cleaned !== prev) {
@@ -81,7 +120,6 @@ function parseBody(text: string): MsgPart[] {
       "[$1:$3]"
     );
   }
-  // Strip stray orphan "[gif:" / "[img:" or trailing "]"
   cleaned = cleaned.replace(/\[(?:gif|img):\s*$/g, "");
 
   const parts: MsgPart[] = [];
@@ -90,7 +128,7 @@ function parseBody(text: string): MsgPart[] {
     if (offset > lastIdx) {
       const textChunk = cleaned.slice(lastIdx, offset);
       if (textChunk.replace(/[\s\]]+/g, "").length > 0) {
-        parts.push({ kind: "text", value: textChunk });
+        parts.push(...splitTextMentions(textChunk, userNames, me));
       }
     }
     parts.push({ kind: kind as "gif" | "img", url });
@@ -100,7 +138,7 @@ function parseBody(text: string): MsgPart[] {
   if (lastIdx < cleaned.length) {
     const tail = cleaned.slice(lastIdx);
     if (tail.replace(/[\s\]]+/g, "").length > 0) {
-      parts.push({ kind: "text", value: tail });
+      parts.push(...splitTextMentions(tail, userNames, me));
     }
   }
   return parts;
@@ -171,6 +209,14 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+
+  // @mention state
+  const [userNames, setUserNames] = useState<string[]>([]);
+  const [mentionOpen, setMentionOpen] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState("");
+  const [mentionIndex, setMentionIndex] = useState(0);
+  /** Position in textarea where the "@" starts (for replacement on select) */
+  const [mentionStart, setMentionStart] = useState<number | null>(null);
 
   // Composer emoji picker
   const composerEmojiRef = useRef<HTMLDivElement>(null);
@@ -311,6 +357,105 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
     }, 300);
     return () => clearTimeout(handle);
   }, [gifQuery, gifOpen]);
+
+  // Load user names once for @mentions (session-cached, not polled)
+  useEffect(() => {
+    getAllEntries().then((entries) => {
+      const names = Array.from(new Set(entries.map((e) => e.name).filter(Boolean)));
+      setUserNames(names);
+    }).catch(() => {});
+  }, []);
+
+  // Filter mention results based on what's typed after @
+  const mentionResults = useMemo(() => {
+    if (!mentionOpen) return [];
+    const q = mentionQuery.toLowerCase();
+    if (!q) return userNames.slice(0, 8);
+    return userNames
+      .filter((n) => n.toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [mentionOpen, mentionQuery, userNames]);
+
+  // Detect @mention context as user types
+  const updateMentionContext = (val: string, caret: number) => {
+    // Look backwards from caret for the most recent "@" not preceded by a word char
+    let i = caret - 1;
+    while (i >= 0) {
+      const ch = val[i];
+      if (ch === "@") {
+        // Must be at start of string or preceded by whitespace/newline
+        const before = i === 0 ? " " : val[i - 1];
+        if (/\s/.test(before) || i === 0) {
+          const query = val.slice(i + 1, caret);
+          // Abort if query contains whitespace (mention has ended)
+          if (/\s/.test(query)) {
+            setMentionOpen(false);
+            return;
+          }
+          setMentionStart(i);
+          setMentionQuery(query);
+          setMentionIndex(0);
+          setMentionOpen(true);
+          return;
+        }
+        setMentionOpen(false);
+        return;
+      }
+      if (/\s/.test(ch)) {
+        setMentionOpen(false);
+        return;
+      }
+      i--;
+    }
+    setMentionOpen(false);
+  };
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setText(val);
+    const caret = e.target.selectionStart ?? val.length;
+    updateMentionContext(val, caret);
+  };
+
+  const insertMention = (name: string) => {
+    const el = textareaRef.current;
+    if (mentionStart === null || !el) {
+      setMentionOpen(false);
+      return;
+    }
+    const caret = el.selectionStart ?? text.length;
+    const before = text.slice(0, mentionStart);
+    const after = text.slice(caret);
+    const inserted = `@${name} `;
+    const next = before + inserted + after;
+    if (next.length > MAX_LEN) return;
+    setText(next);
+    setMentionOpen(false);
+    setMentionQuery("");
+    setMentionStart(null);
+    requestAnimationFrame(() => {
+      el.focus();
+      const pos = before.length + inserted.length;
+      el.setSelectionRange(pos, pos);
+    });
+  };
+
+  const handleTextKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!mentionOpen || mentionResults.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setMentionIndex((i) => (i + 1) % mentionResults.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setMentionIndex((i) => (i - 1 + mentionResults.length) % mentionResults.length);
+    } else if (e.key === "Enter" || e.key === "Tab") {
+      e.preventDefault();
+      insertMention(mentionResults[mentionIndex]);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setMentionOpen(false);
+    }
+  };
 
   const insertEmoji = (emoji: string) => {
     const el = textareaRef.current;
@@ -475,7 +620,7 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
               const key =
                 msg.id ??
                 `${msg.createdAt ?? ""}-${msg.userName ?? ""}-${body.slice(0, 12)}`;
-              const parts = parseBody(body);
+              const parts = parseBody(body, userNames, userName);
               const msgReactions = (msg.id && reactionsByComment[msg.id]) || [];
               const grouped = groupReactions(msgReactions, userName);
               const canReact = Boolean(userName && msg.id);
@@ -503,6 +648,16 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
                       {parts.map((p, i) => {
                         if (p.kind === "text") {
                           return <span key={i} className="cf-msg-text">{p.value}</span>;
+                        }
+                        if (p.kind === "mention") {
+                          return (
+                            <span
+                              key={i}
+                              className={`cf-mention ${p.matched ? "cf-mention-me" : ""}`}
+                            >
+                              @{p.name}
+                            </span>
+                          );
                         }
                         if (p.kind === "gif") {
                           return (
@@ -600,16 +755,43 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
             <label htmlFor="community-feed-input" className="community-feed-sr-only">
               Write a post
             </label>
-            <textarea
-              ref={textareaRef}
-              id="community-feed-input"
-              className="community-feed-textarea"
-              placeholder="Share a take, reaction, or trash talk…"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              maxLength={MAX_LEN}
-              rows={3}
-            />
+            <div className="cf-textarea-wrap">
+              <textarea
+                ref={textareaRef}
+                id="community-feed-input"
+                className="community-feed-textarea"
+                placeholder="Share a take, reaction, or trash talk… (type @ to mention)"
+                value={text}
+                onChange={handleTextChange}
+                onKeyDown={handleTextKeyDown}
+                maxLength={MAX_LEN}
+                rows={3}
+              />
+              {mentionOpen && mentionResults.length > 0 && (
+                <div className="cf-mention-popover" role="listbox" aria-label="Mention a user">
+                  {mentionResults.map((name, i) => (
+                    <button
+                      key={name}
+                      type="button"
+                      role="option"
+                      aria-selected={i === mentionIndex}
+                      className={`cf-mention-item ${i === mentionIndex ? "cf-mention-item-active" : ""}`}
+                      onMouseEnter={() => setMentionIndex(i)}
+                      onMouseDown={(e) => {
+                        // Prevent textarea blur so selection works
+                        e.preventDefault();
+                        insertMention(name);
+                      }}
+                    >
+                      <span className="cf-mention-avatar" style={avatarStyle(name)} aria-hidden>
+                        {avatarInitial(name)}
+                      </span>
+                      <span className="cf-mention-name">{name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <div className="community-feed-compose-footer">
               <div className="community-feed-compose-left" ref={composerEmojiRef}>
                 <button

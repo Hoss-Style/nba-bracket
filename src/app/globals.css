@@ -2930,6 +2930,80 @@ body {
   border: 1px solid var(--border);
 }
 
+/* ===== @mention chips in rendered messages ===== */
+.cf-mention {
+  display: inline-block;
+  padding: 0.05rem 0.35rem;
+  margin: 0 0.05rem;
+  border-radius: 5px;
+  background: rgba(229, 96, 32, 0.14);
+  color: var(--accent-orange);
+  font-weight: 600;
+  line-height: 1.3;
+}
+.cf-mention-me {
+  background: rgba(229, 96, 32, 0.28);
+  border: 1px solid rgba(229, 96, 32, 0.5);
+}
+
+/* ===== @mention dropdown in composer ===== */
+.cf-textarea-wrap {
+  position: relative;
+}
+.cf-mention-popover {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  width: min(260px, calc(100vw - 2rem));
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 30;
+  padding: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.cf-mention-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 7px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  transition: background 0.1s;
+}
+.cf-mention-item:hover,
+.cf-mention-item-active {
+  background: rgba(229, 96, 32, 0.12);
+}
+.cf-mention-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.cf-mention-name {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
 /* Full-screen lightbox overlay */
 .cf-lightbox {
   position: fixed;
@@ -3105,7 +3179,15 @@ body {
 
 @media (max-width: 480px) {
   .community-feed-list {
-    max-height: min(48vh, 340px);
+    /* Taller on mobile so GIFs and images fit in view without
+       aggressive scrolling. */
+    max-height: min(68vh, 560px);
+  }
+
+  /* Inline chat in dashboard still constrained a bit so it doesn't
+     dominate the home tab */
+  .dashboard-chat-inline .community-feed-list {
+    max-height: min(55vh, 420px);
   }
 
   .community-feed-title {
