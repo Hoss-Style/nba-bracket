@@ -256,6 +256,11 @@ export const TEAM_PLAYERS: Record<string, string[]> = {
     "Tristan da Silva",
     "Jevon Carter",
     "Jett Howard",
+    "Jamal Cain",
+    "Colin Castleton",
+    "Alex Morales",
+    "Noah Penda",
+    "Jase Richardson",
   ],
   CHA: [
     "LaMelo Ball",
