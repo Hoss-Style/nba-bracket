@@ -227,6 +227,12 @@ export const TEAM_PLAYERS: Record<string, string[]> = {
     "Haywood Highsmith",
     "Rasheer Fleming",
     "Koby Brea",
+    "Collin Gillespie",
+    "Jordan Goodwin",
+    "Amir Coffey",
+    "Isaiah Livers",
+    "Jamaree Bouyea",
+    "CJ Huntley",
   ],
   GSW: [
     "Stephen Curry",

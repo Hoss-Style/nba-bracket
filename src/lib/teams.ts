@@ -10,7 +10,7 @@ export const WEST_TEAMS: Team[] = [
   { seed: 5, name: "Rockets", abbreviation: "HOU", conference: "WEST", primaryColor: "#CE1141", secondaryColor: "#000000" },
   { seed: 6, name: "Timberwolves", abbreviation: "MIN", conference: "WEST", primaryColor: "#0C2340", secondaryColor: "#236192" },
   { seed: 7, name: "Trail Blazers", abbreviation: "POR", conference: "WEST", primaryColor: "#E03A3E", secondaryColor: "#000000" },
-  { seed: 8, name: "TBD", abbreviation: "TBD", conference: "WEST", primaryColor: "#666666", secondaryColor: "#999999", tbd: true },
+  { seed: 8, name: "Suns", abbreviation: "PHX", conference: "WEST", primaryColor: "#1D1160", secondaryColor: "#E56020" },
 ];
 
 export const EAST_TEAMS: Team[] = [
