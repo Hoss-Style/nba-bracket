@@ -8,6 +8,9 @@ import { Entry, MatchupResultStatus } from "@/lib/types";
 import { getEntryById, getActualResults } from "@/lib/supabase";
 import { getMatchupStatuses, getEliminatedTeams, calculateAllMatchupPoints } from "@/lib/scoring";
 import Toast from "@/components/Toast";
+import { fetchNbaStatus, type SeriesStatus } from "@/lib/nbaStatus";
+
+const SERIES_POLL_MS = 60_000;
 
 export default function ViewBracketPage() {
   const params = useParams();
@@ -19,8 +22,30 @@ export default function ViewBracketPage() {
   const [matchupPoints, setMatchupPoints] = useState<Record<string, number> | null>(null);
   const [mvpCorrect, setMvpCorrect] = useState<boolean | null>(null);
   const [eliminatedTeams, setEliminatedTeams] = useState<Set<string>>(new Set());
+  const [seriesStatusMap, setSeriesStatusMap] = useState<Record<string, SeriesStatus> | null>(null);
   const [toast, setToast] = useState<{ show: boolean; message: string; type: "success" | "error" }>({ show: false, message: "", type: "success" });
   const bracketRef = useRef<HTMLDivElement>(null);
+
+  // Poll live series status while tab is visible
+  useEffect(() => {
+    let cancelled = false;
+    let interval: ReturnType<typeof setInterval> | null = null;
+    const load = async () => {
+      const data = await fetchNbaStatus();
+      if (cancelled) return;
+      if (data) setSeriesStatusMap(data.series);
+    };
+    const start = () => { if (!interval) interval = setInterval(load, SERIES_POLL_MS); };
+    const stop = () => { if (interval) { clearInterval(interval); interval = null; } };
+    const onVis = () => {
+      if (document.visibilityState === "visible") { load(); start(); }
+      else stop();
+    };
+    load();
+    start();
+    document.addEventListener("visibilitychange", onVis);
+    return () => { cancelled = true; stop(); document.removeEventListener("visibilitychange", onVis); };
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -147,6 +172,7 @@ export default function ViewBracketPage() {
                   matchupPoints={matchupPoints}
                   mvpCorrect={mvpCorrect}
                   eliminatedTeams={eliminatedTeams}
+                  seriesStatusMap={seriesStatusMap}
                 />
               </div>
 

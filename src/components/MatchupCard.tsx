@@ -1,6 +1,7 @@
 "use client";
 
 import { Team, MatchupPick } from "@/lib/types";
+import type { SeriesStatus } from "@/lib/nbaStatus";
 
 interface MatchupCardProps {
   topTeam: Team | null;
@@ -12,11 +13,12 @@ interface MatchupCardProps {
   resultStatus?: { winnerCorrect: boolean; gamesCorrect: boolean };
   pointsEarned?: number;
   eliminatedTeams?: Set<string>;
+  seriesStatus?: SeriesStatus | null;
 }
 
 const GAME_OPTIONS = [4, 5, 6, 7];
 
-export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disabled, compact, resultStatus, pointsEarned, eliminatedTeams }: MatchupCardProps) {
+export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disabled, compact, resultStatus, pointsEarned, eliminatedTeams, seriesStatus }: MatchupCardProps) {
   const handleTeamClick = (team: Team) => {
     if (disabled || team.tbd) return;
     if (pick?.winner === team.abbreviation) {
@@ -188,6 +190,17 @@ export default function MatchupCard({ topTeam, bottomTeam, pick, onPick, disable
               {pointsEarned > 0 ? `+${pointsEarned}` : "0"}
             </span>
           )}
+        </div>
+      )}
+
+      {/* Live series status (from ESPN) */}
+      {seriesStatus && (
+        <div
+          className={`matchup-series ${seriesStatus.complete ? "matchup-series-complete" : ""}`}
+          title={seriesStatus.summary}
+        >
+          {seriesStatus.complete && <span className="matchup-series-trophy" aria-hidden>🏆</span>}
+          <span className="matchup-series-text">{seriesStatus.summary}</span>
         </div>
       )}
     </div>

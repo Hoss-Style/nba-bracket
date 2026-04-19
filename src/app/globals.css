@@ -914,6 +914,39 @@ body {
   font-style: italic;
   font-size: 0.75rem;
 }
+
+/* Live series status bar at the bottom of each MatchupCard */
+.matchup-series {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  line-height: 1.25;
+  text-align: center;
+}
+.matchup-series-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.matchup-series-complete {
+  background: rgba(255, 215, 0, 0.08);
+  border-color: rgba(255, 215, 0, 0.35);
+  color: var(--accent-gold, #ffd700);
+}
+.matchup-series-trophy {
+  font-size: 0.8rem;
+  line-height: 1;
+}
 .matchup-team-tbd {
   opacity: 0.5;
   cursor: not-allowed !important;
@@ -4712,5 +4745,155 @@ body {
   .skeleton {
     animation: none;
   }
+}
+
+/* ========== LIVE GAMES WIDGET (Home > Games tab) ========== */
+.games-widget {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 0.25rem;
+  box-sizing: border-box;
+}
+.games-widget-header {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+.games-widget-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem;
+  color: var(--text-primary);
+}
+.games-widget-sub {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.games-widget-section {
+  margin-bottom: 1rem;
+}
+.games-widget-section-title {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+  padding: 0 0.15rem;
+}
+.games-widget-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.games-widget-card,
+.games-card {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+}
+.games-widget-empty {
+  padding: 1.5rem 1rem;
+  text-align: center;
+}
+.games-widget-empty p {
+  margin: 0 0 0.35rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+.games-widget-empty-sub {
+  font-size: 0.75rem !important;
+  color: var(--text-muted) !important;
+}
+.games-widget-updated {
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.75rem;
+}
+
+.games-card-in {
+  border-color: rgba(229, 96, 32, 0.5);
+  box-shadow: 0 0 0 1px rgba(229, 96, 32, 0.25), 0 4px 16px rgba(229, 96, 32, 0.1);
+}
+.games-card-teams {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.games-card-team {
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.95rem;
+}
+.games-card-team-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+}
+.games-card-team-name {
+  color: var(--text-primary);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.games-card-team-score {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  min-width: 2.25ch;
+  text-align: right;
+}
+.games-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.55rem;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+.games-card-live {
+  color: var(--accent-orange);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  animation: gamesLivePulse 2s ease-in-out infinite;
+}
+@keyframes gamesLivePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.games-card-detail {
+  flex-shrink: 0;
+}
+.games-card-series {
+  margin-left: auto;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  font-size: 0.68rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.games-card-series-won {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  font-size: 1.1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .games-card-live { animation: none; }
 }
 

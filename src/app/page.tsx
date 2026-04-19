@@ -7,6 +7,7 @@ import Dashboard from "@/components/Dashboard";
 import CommunityFeed from "@/components/CommunityFeed";
 import PrizePoolCard from "@/components/PrizePoolCard";
 import RulesPanel from "@/components/RulesPanel";
+import GamesWidget from "@/components/GamesWidget";
 import HomeSectionTabs from "@/components/HomeSectionTabs";
 import { BracketUser } from "@/lib/types";
 import { getEntryByEmail, submitEntry, updateEntry } from "@/lib/supabase";
@@ -169,6 +170,7 @@ export default function Home() {
             <HomeSectionTabs
               tabs={[
                 { id: "home", label: "Home", content: <Dashboard user={loggedInUser} /> },
+                { id: "games", label: "Games", content: <GamesWidget /> },
                 { id: "prizes", label: "Prize pool", content: <PrizePoolCard /> },
                 {
                   id: "community",

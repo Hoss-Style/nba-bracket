@@ -29,6 +29,7 @@ export default function BracketPage() {
   const [matchupPoints, setMatchupPoints] = useState<Record<string, number> | null>(null);
   const [mvpCorrect, setMvpCorrect] = useState<boolean | null>(null);
   const [eliminatedTeams, setEliminatedTeams] = useState<Set<string>>(new Set());
+  const [seriesStatusMap, setSeriesStatusMap] = useState<Record<string, import("@/lib/nbaStatus").SeriesStatus> | null>(null);
   const [toast, setToast] = useState<{ show: boolean; message: string; type: "success" | "error" }>({ show: false, message: "", type: "success" });
   const [exporting, setExporting] = useState(false);
   const bracketRef = useRef<HTMLDivElement>(null);
@@ -41,6 +42,28 @@ export default function BracketPage() {
       if (!isBeforeDeadline()) setLocked(true);
     }, 10000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Poll live series status (ESPN) for status bars on MatchupCards
+  useEffect(() => {
+    let cancelled = false;
+    let interval: ReturnType<typeof setInterval> | null = null;
+    const load = async () => {
+      const { fetchNbaStatus } = await import("@/lib/nbaStatus");
+      const data = await fetchNbaStatus();
+      if (cancelled) return;
+      if (data) setSeriesStatusMap(data.series);
+    };
+    const start = () => { if (!interval) interval = setInterval(load, 60_000); };
+    const stop = () => { if (interval) { clearInterval(interval); interval = null; } };
+    const onVis = () => {
+      if (document.visibilityState === "visible") { load(); start(); }
+      else stop();
+    };
+    load();
+    start();
+    document.addEventListener("visibilitychange", onVis);
+    return () => { cancelled = true; stop(); document.removeEventListener("visibilitychange", onVis); };
   }, []);
 
   // Load user from localStorage + fetch their existing picks
@@ -259,6 +282,7 @@ export default function BracketPage() {
                 matchupPoints={matchupPoints}
                 mvpCorrect={mvpCorrect}
                 eliminatedTeams={eliminatedTeams}
+                seriesStatusMap={seriesStatusMap}
               />
             </div>
           </div>
