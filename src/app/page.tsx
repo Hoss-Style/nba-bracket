@@ -171,7 +171,7 @@ export default function Home() {
               tabs={[
                 { id: "home", label: "Home", content: <Dashboard user={loggedInUser} /> },
                 { id: "games", label: "Games", content: <GamesWidget /> },
-                { id: "prizes", label: "Prize pool", content: <PrizePoolCard /> },
+                { id: "prizes", label: "Prize", content: <PrizePoolCard /> },
                 {
                   id: "community",
                   label: "Community",
