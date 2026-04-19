@@ -163,77 +163,10 @@ export default function Dashboard({ user }: DashboardProps) {
         )}
       </div>
 
-      {/* Bracket Status */}
+      {/* Inline Group Chat — top of page now that picks are locked */}
       {loading ? (
-        <>
-          <SkeletonCard />
-          <SkeletonCard />
-        </>
-      ) : hasSubmitted ? (
-        <div className="dashboard-card dashboard-bracket-card">
-          <div className="dashboard-bracket-header">
-            <div className="dashboard-card-title">Your Picks</div>
-            <div className="dashboard-bracket-status">&#9989; Submitted</div>
-          </div>
-          <div className="dashboard-bracket-picks">
-            <div className="dashboard-picks-panel">
-              <div className="dashboard-champ-section">
-                {champion ? (
-                  <>
-                    <div
-                      className="dashboard-champ-icon"
-                      style={{ background: `${champion.primaryColor}25`, borderColor: `${champion.primaryColor}50` }}
-                    >
-                      &#127942;
-                    </div>
-                    <div className="dashboard-champ-info">
-                      <span className="dashboard-champ-label">Champion</span>
-                      <span className="dashboard-champ-name" style={{ "--champ-color": champion.primaryColor } as React.CSSProperties}>
-                        {champion.name}
-                      </span>
-                    </div>
-                    <span className="dashboard-champ-seed" style={{ "--champ-color": champion.primaryColor, background: `${champion.primaryColor}20`, border: `1px solid ${champion.primaryColor}40` } as React.CSSProperties}>
-                      #{champion.seed} seed
-                    </span>
-                  </>
-                ) : (
-                  <span style={{ color: "var(--text-muted)" }}>No champion picked</span>
-                )}
-              </div>
-              <div className="dashboard-mvp-section">
-                <span className="dashboard-mvp-label">Finals MVP</span>
-                <span className="dashboard-mvp-name" title={mvp || undefined}>{mvp || "—"}</span>
-              </div>
-            </div>
-          </div>
-          <div className="dashboard-actions">
-            <a href="/bracket" className="btn btn-primary dashboard-action-btn">View Bracket</a>
-            {beforeDeadline && (
-              <a href="/bracket" className="btn btn-secondary dashboard-action-btn" onClick={() => {
-                sessionStorage.setItem("bracket_edit_mode", "true");
-              }}>Edit Picks</a>
-            )}
-            <a href="/scoreboard" className="btn btn-secondary dashboard-action-btn">Scoreboard</a>
-          </div>
-        </div>
+        <SkeletonCard />
       ) : (
-        <div className="dashboard-card dashboard-empty-card">
-          <div className="dashboard-empty-icon">&#128203;</div>
-          <p className="dashboard-empty-text">
-            {beforeDeadline
-              ? "You haven't filled out your bracket yet!"
-              : "You didn't submit a bracket before the deadline."}
-          </p>
-          {beforeDeadline && (
-            <a href="/bracket" className="btn btn-accent dashboard-cta">
-              Make Your Picks &rarr;
-            </a>
-          )}
-        </div>
-      )}
-
-      {/* Inline Group Chat */}
-      {!loading && (
         <div className="dashboard-chat-inline">
           <CommunityFeed userName={user.name} />
         </div>
@@ -311,6 +244,72 @@ export default function Dashboard({ user }: DashboardProps) {
                 )}
               </div>
             </>
+          )}
+        </div>
+      )}
+
+      {/* Bracket Status — moved to bottom so the chat thread leads the page */}
+      {loading ? (
+        <SkeletonCard />
+      ) : hasSubmitted ? (
+        <div className="dashboard-card dashboard-bracket-card">
+          <div className="dashboard-bracket-header">
+            <div className="dashboard-card-title">Your Picks</div>
+            <div className="dashboard-bracket-status">&#9989; Submitted</div>
+          </div>
+          <div className="dashboard-bracket-picks">
+            <div className="dashboard-picks-panel">
+              <div className="dashboard-champ-section">
+                {champion ? (
+                  <>
+                    <div
+                      className="dashboard-champ-icon"
+                      style={{ background: `${champion.primaryColor}25`, borderColor: `${champion.primaryColor}50` }}
+                    >
+                      &#127942;
+                    </div>
+                    <div className="dashboard-champ-info">
+                      <span className="dashboard-champ-label">Champion</span>
+                      <span className="dashboard-champ-name" style={{ "--champ-color": champion.primaryColor } as React.CSSProperties}>
+                        {champion.name}
+                      </span>
+                    </div>
+                    <span className="dashboard-champ-seed" style={{ "--champ-color": champion.primaryColor, background: `${champion.primaryColor}20`, border: `1px solid ${champion.primaryColor}40` } as React.CSSProperties}>
+                      #{champion.seed} seed
+                    </span>
+                  </>
+                ) : (
+                  <span style={{ color: "var(--text-muted)" }}>No champion picked</span>
+                )}
+              </div>
+              <div className="dashboard-mvp-section">
+                <span className="dashboard-mvp-label">Finals MVP</span>
+                <span className="dashboard-mvp-name" title={mvp || undefined}>{mvp || "—"}</span>
+              </div>
+            </div>
+          </div>
+          <div className="dashboard-actions">
+            <a href="/bracket" className="btn btn-primary dashboard-action-btn">View Bracket</a>
+            {beforeDeadline && (
+              <a href="/bracket" className="btn btn-secondary dashboard-action-btn" onClick={() => {
+                sessionStorage.setItem("bracket_edit_mode", "true");
+              }}>Edit Picks</a>
+            )}
+            <a href="/scoreboard" className="btn btn-secondary dashboard-action-btn">Scoreboard</a>
+          </div>
+        </div>
+      ) : (
+        <div className="dashboard-card dashboard-empty-card">
+          <div className="dashboard-empty-icon">&#128203;</div>
+          <p className="dashboard-empty-text">
+            {beforeDeadline
+              ? "You haven't filled out your bracket yet!"
+              : "You didn't submit a bracket before the deadline."}
+          </p>
+          {beforeDeadline && (
+            <a href="/bracket" className="btn btn-accent dashboard-cta">
+              Make Your Picks &rarr;
+            </a>
           )}
         </div>
       )}
