@@ -17,6 +17,23 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "2026 NBA Bracket Challenge",
   description: "Lew's Annual NBA Playoff Bracket Challenge - Pick your winners, call the upsets, and win the pot.",
+  applicationName: "Lew's Bracket",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "Lew's Bracket",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/logo.png", sizes: "1366x768", type: "image/png" },
+    ],
+    apple: [
+      { url: "/logo.png", sizes: "180x180", type: "image/png" },
+    ],
+    shortcut: "/logo.png",
+  },
   openGraph: {
     title: "2026 NBA Bracket Challenge",
     description: "Pick your winners, call the upsets, and win the pot.",

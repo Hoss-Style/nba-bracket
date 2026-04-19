@@ -1,0 +1,17 @@
+{
+  "name": "Lew's 2026 NBA Bracket Challenge",
+  "short_name": "Lew's Bracket",
+  "description": "Lew's Annual NBA Playoff Bracket Challenge",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#E56020",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "1366x768",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
