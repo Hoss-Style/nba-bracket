@@ -13,7 +13,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const CACHE_TTL_MS = 60_000; // 60 seconds
-const ESPN_BASE = "http://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard";
+const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard";
 
 // Playoff date window — wide enough to cover first round through finals
 const PLAYOFF_START = "20260418";
@@ -155,50 +155,72 @@ function seriesKey(a: string, b: string): string {
 }
 
 function extractSeriesMap(events: EspnEvent[]): Record<string, SeriesStatus> {
-  // ESPN's series object on each event already has the latest wins/ties,
-  // so we just need the LATEST event per team-pair.
-  const byKey: Record<string, { event: EspnEvent; date: number }> = {};
+  // Build a map keyed by unordered team pair. Use the GAME's competitors
+  // for reliable team abbreviations, and prefer the LATEST game's series
+  // data so the record we show is always current.
+  const byKey: Record<string, { event: EspnEvent; date: number; teamA: string; teamB: string }> = {};
+
   for (const event of events) {
     const comp = event.competitions?.[0];
     if (!comp?.series) continue;
-    const competitors = comp.competitors;
-    if (!competitors || competitors.length < 2) continue;
-    const a = toOurs(competitors[0].team?.abbreviation);
-    const b = toOurs(competitors[1].team?.abbreviation);
-    if (!a || !b) continue;
-    const key = seriesKey(a, b);
+    const gameCompetitors = comp.competitors;
+    if (!gameCompetitors || gameCompetitors.length < 2) continue;
+    const teamA = toOurs(gameCompetitors[0].team?.abbreviation);
+    const teamB = toOurs(gameCompetitors[1].team?.abbreviation);
+    if (!teamA || !teamB) continue;
+    const key = seriesKey(teamA, teamB);
     const date = new Date(event.date ?? 0).getTime();
     const prev = byKey[key];
     if (!prev || date > prev.date) {
-      byKey[key] = { event, date };
+      byKey[key] = { event, date, teamA, teamB };
     }
   }
 
   const out: Record<string, SeriesStatus> = {};
   for (const key of Object.keys(byKey)) {
-    const comp = byKey[key].event.competitions?.[0];
+    const { event, teamA, teamB } = byKey[key];
+    const comp = event.competitions?.[0];
     const series = comp?.series;
-    if (!series?.competitors || series.competitors.length < 2) continue;
-    const rawA = series.competitors[0];
-    const rawB = series.competitors[1];
-    const a = toOurs(rawA.team?.abbreviation);
-    const b = toOurs(rawB.team?.abbreviation);
-    if (!a || !b) continue;
-    const winsA = rawA.wins ?? 0;
-    const winsB = rawB.wins ?? 0;
-    const lead = winsA > winsB ? a : winsB > winsA ? b : null;
+    if (!series) continue;
+
+    // Derive wins: prefer series.competitors[*].wins, fallback to parsing
+    // summary string like "OKC leads series 2-1".
+    let winsA = 0;
+    let winsB = 0;
+    if (series.competitors && series.competitors.length >= 2) {
+      for (const sc of series.competitors) {
+        const abbr = toOurs(sc.team?.abbreviation);
+        const wins = sc.wins ?? 0;
+        if (abbr === teamA) winsA = wins;
+        else if (abbr === teamB) winsB = wins;
+      }
+    }
+    // Fallback: parse summary e.g. "OKC leads series 2-1"
+    if (winsA === 0 && winsB === 0 && series.summary) {
+      const m = /(\w+)\s+leads?\s+series\s+(\d+)-(\d+)/i.exec(series.summary);
+      if (m) {
+        const leader = toOurs(m[1]);
+        const hi = parseInt(m[2], 10);
+        const lo = parseInt(m[3], 10);
+        if (leader === teamA) { winsA = hi; winsB = lo; }
+        else if (leader === teamB) { winsB = hi; winsA = lo; }
+      }
+    }
+
+    const lead = winsA > winsB ? teamA : winsB > winsA ? teamB : null;
     const complete = winsA >= 4 || winsB >= 4;
-    out[key] = {
-      key,
-      teamA: a,
-      teamB: b,
-      winsA,
-      winsB,
-      lead,
-      complete,
-      summary: series.summary ?? `${a} ${winsA} - ${b} ${winsB}`,
-    };
+    const summary =
+      series.summary && series.summary.trim().length > 0
+        ? series.summary
+        : winsA === 0 && winsB === 0
+          ? `${teamA} vs ${teamB}`
+          : lead
+            ? `${lead} leads ${Math.max(winsA, winsB)}-${Math.min(winsA, winsB)}`
+            : `Tied ${winsA}-${winsB}`;
+
+    out[key] = { key, teamA, teamB, winsA, winsB, lead, complete, summary };
   }
+
   return out;
 }
 
@@ -252,8 +274,13 @@ export async function GET() {
     }
     const data = await fetchEspn();
     cached = { at: now, data };
+    console.log(
+      `[nba-status] fetched: ${data.games.length} games, ${Object.keys(data.series).length} series`,
+      Object.keys(data.series)
+    );
     return NextResponse.json({ ok: true, cached: false, ...data });
   } catch (err) {
+    console.error("[nba-status] error:", err);
     // If we have stale data, serve it instead of failing entirely
     if (cached) {
       return NextResponse.json({
