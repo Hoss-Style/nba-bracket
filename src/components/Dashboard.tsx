@@ -136,12 +136,7 @@ export default function Dashboard({ user }: DashboardProps) {
           Hey, {user.name} <span className="dashboard-wave">&#128075;</span>
         </h1>
 
-        {countdown.expired ? (
-          <div className="dashboard-expired">
-            <span className="dashboard-expired-icon">&#127936;</span>
-            <span>Playoffs Have Started!</span>
-          </div>
-        ) : (
+        {!countdown.expired && (
           <div className="dashboard-countdown">
             <div className="dashboard-countdown-grid">
               {[
