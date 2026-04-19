@@ -2850,6 +2850,19 @@ body {
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
   z-index: 20;
 }
+/* Backdrop only active on mobile where the picker is position:fixed */
+.cf-reaction-backdrop {
+  display: none;
+}
+@media (max-width: 480px) {
+  .cf-reaction-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1099;
+  }
+}
 .cf-reaction-picker-item {
   width: 32px;
   height: 32px;
@@ -3241,9 +3254,27 @@ body {
   }
 
   /* Reaction picker anchored to right edge if button is near right screen edge */
+  /* On mobile, anchor the picker to the viewport (not the message)
+     so the chat list's overflow clipping can't cut it off. */
   .cf-reaction-picker {
-    left: auto;
-    right: 0;
+    position: fixed;
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    top: auto;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: min(calc(100vw - 1.5rem), 340px);
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0.6rem;
+    gap: 0.3rem;
+    z-index: 1100;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  }
+  .cf-reaction-picker-item {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
   }
 
   /* Smaller padding on chips for tight screens */

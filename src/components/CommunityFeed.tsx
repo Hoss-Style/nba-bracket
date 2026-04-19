@@ -726,18 +726,26 @@ export default function CommunityFeed({ userName }: CommunityFeedProps) {
                               </span>
                             </button>
                             {msgPickerFor === msg.id && (
-                              <div className="cf-reaction-picker" role="dialog" aria-label="Pick a reaction">
-                                {QUICK_REACTIONS.map((emoji) => (
-                                  <button
-                                    key={emoji}
-                                    type="button"
-                                    className="cf-reaction-picker-item"
-                                    onClick={() => msg.id && toggleReaction(msg.id, emoji)}
-                                  >
-                                    {emoji}
-                                  </button>
-                                ))}
-                              </div>
+                              <>
+                                {/* Backdrop: lets mobile users tap outside to close */}
+                                <div
+                                  className="cf-reaction-backdrop"
+                                  onClick={() => setMsgPickerFor(null)}
+                                  aria-hidden
+                                />
+                                <div className="cf-reaction-picker" role="dialog" aria-label="Pick a reaction">
+                                  {QUICK_REACTIONS.map((emoji) => (
+                                    <button
+                                      key={emoji}
+                                      type="button"
+                                      className="cf-reaction-picker-item"
+                                      onClick={() => msg.id && toggleReaction(msg.id, emoji)}
+                                    >
+                                      {emoji}
+                                    </button>
+                                  ))}
+                                </div>
+                              </>
                             )}
                           </div>
                         )}
