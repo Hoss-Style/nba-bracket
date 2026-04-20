@@ -933,10 +933,10 @@ body {
   text-align: center;
 }
 .matchup-series-text {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
 }
 .matchup-series-complete {
   background: rgba(255, 215, 0, 0.08);
