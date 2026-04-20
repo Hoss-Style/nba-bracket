@@ -12,6 +12,7 @@ import HomeSectionTabs from "@/components/HomeSectionTabs";
 import { BracketUser } from "@/lib/types";
 import { getEntryByEmail, submitEntry, updateEntry } from "@/lib/supabase";
 import { createEmptyPicks } from "@/lib/emptyPicks";
+import { isBeforeDeadline } from "@/lib/deadline";
 
 type Step = "email" | "pin" | "register" | "forgot";
 
@@ -54,6 +55,9 @@ export default function Home() {
       if (existing) {
         // Returning user — ask for PIN
         setStep("pin");
+      } else if (!isBeforeDeadline()) {
+        // Registration is closed once the playoffs start
+        setError("Registration is closed — the playoffs have already started. If you think this is a mistake, message Lew.");
       } else {
         // New user — show registration
         setStep("register");
@@ -89,6 +93,11 @@ export default function Home() {
   };
 
   const handleRegister = async () => {
+    if (!isBeforeDeadline()) {
+      setError("Registration is closed — the playoffs have already started.");
+      setStep("email");
+      return;
+    }
     if (!name.trim()) { setError("Enter your name."); return; }
     if (!phone.trim()) { setError("Enter your phone number."); return; }
     if (newPin.length !== 4) { setError("PIN must be exactly 4 digits."); return; }
