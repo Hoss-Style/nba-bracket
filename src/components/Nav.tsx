@@ -55,7 +55,7 @@ export default function Nav() {
     <>
       <nav className="nav">
         <Link href="/" className="nav-brand">
-          <Image src="/logo.png" alt="" width={32} height={32} className="nav-brand-logo" />
+          <Image src="/logo.png" alt="" width={64} height={64} className="nav-brand-logo" />
           <span className="nav-brand-full">NBA Bracket Challenge</span>
           <span className="nav-brand-short">NBA Bracket</span>
         </Link>

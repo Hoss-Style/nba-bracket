@@ -593,8 +593,8 @@ body {
   flex-shrink: 0;
 }
 .nav-brand-logo {
-  width: 28px;
-  height: 28px;
+  width: 48px;
+  height: 48px;
   object-fit: contain;
   flex-shrink: 0;
 }
