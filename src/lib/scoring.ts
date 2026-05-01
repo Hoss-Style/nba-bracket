@@ -1,5 +1,6 @@
 import { BracketPicks, MatchupPick, MatchupResultStatus, ScoreBreakdown, ROUND_POINTS, FINALS_MVP_POINTS, RoundName } from "./types";
 import { getTeamByAbbr, isUpset, WEST_TEAMS, EAST_TEAMS } from "./teams";
+import { TEAM_PLAYERS } from "./players";
 
 const MATCHUP_ROUNDS: Record<string, RoundName> = {
   westR1_1: "R1", westR1_2: "R1", westR1_3: "R1", westR1_4: "R1",
@@ -125,6 +126,16 @@ export function getMatchupStatuses(
   return statuses;
 }
 
+// Look up which team a given player belongs to (case-insensitive name match)
+function getTeamForPlayer(playerName: string): string | null {
+  const target = playerName.toLowerCase().trim();
+  if (!target) return null;
+  for (const [abbr, players] of Object.entries(TEAM_PLAYERS)) {
+    if (players.some((p) => p.toLowerCase() === target)) return abbr;
+  }
+  return null;
+}
+
 export function calculateMaxPotential(
   playerPicks: BracketPicks,
   actualResults: BracketPicks,
@@ -134,6 +145,9 @@ export function calculateMaxPotential(
   const current = calculateScore(playerPicks, actualResults, actualMVP);
   let maxRemaining = current.total;
 
+  // Teams that have already lost a series can't earn the user any more points
+  const eliminated = getEliminatedTeams(actualResults);
+
   const matchupIds = Object.keys(MATCHUP_ROUNDS) as (keyof BracketPicks)[];
 
   for (const matchupId of matchupIds) {
@@ -142,6 +156,9 @@ export function calculateMaxPotential(
 
     // Only count undecided matchups where the player made a pick
     if (!playerPick || actualResult) continue;
+
+    // If the team they picked is already eliminated, this matchup is unwinnable
+    if (eliminated.has(playerPick.winner)) continue;
 
     const round = MATCHUP_ROUNDS[matchupId];
     const points = ROUND_POINTS[round];
@@ -157,9 +174,13 @@ export function calculateMaxPotential(
     }
   }
 
-  // Finals MVP if not yet decided
+  // Finals MVP if not yet decided — and the picked player's team is still alive
   if (playerPicks.finalsMVP && !actualMVP) {
-    maxRemaining += FINALS_MVP_POINTS;
+    const mvpTeam = getTeamForPlayer(playerPicks.finalsMVP);
+    // If we can't resolve the team (custom write-in), keep optimistic; otherwise gate on elimination
+    if (!mvpTeam || !eliminated.has(mvpTeam)) {
+      maxRemaining += FINALS_MVP_POINTS;
+    }
   }
 
   return maxRemaining;
